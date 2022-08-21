@@ -1,29 +1,28 @@
 ﻿using MinimalApis.MvcSample.Domain;
 
-namespace MinimalApis.MvcSample.Models
+namespace MinimalApis.MvcSample.Models;
+
+/// <summary>
+/// Represents a single client.
+/// </summary>
+public class ClientModel
 {
     /// <summary>
-    /// Represents a single client.
+    /// Gets or sets the client id.
     /// </summary>
-    public class ClientModel
+    public long Id { get; set; }
+
+    /// <summary>
+    /// Gets or sets the client name.
+    /// </summary>
+    public string Name { get; set; }
+
+    public static ClientModel FromClient(Client client)
     {
-        /// <summary>
-        /// Gets or sets the client id.
-        /// </summary>
-        public long Id { get; set; }
-
-        /// <summary>
-        /// Gets or sets the client name.
-        /// </summary>
-        public string Name { get; set; }
-
-        public static ClientModel FromClient(Client client)
+        return new ClientModel
         {
-            return new ClientModel
-            {
-                Id = client.Id,
-                Name = client.Name
-            };
-        }
+            Id = client.Id,
+            Name = client.Name
+        };
     }
 }

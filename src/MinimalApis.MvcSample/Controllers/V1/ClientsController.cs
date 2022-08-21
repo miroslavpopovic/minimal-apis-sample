@@ -5,148 +5,147 @@ using MinimalApis.MvcSample.Data;
 using MinimalApis.MvcSample.Domain;
 using MinimalApis.MvcSample.Models;
 
-namespace MinimalApis.MvcSample.Controllers.V1
+namespace MinimalApis.MvcSample.Controllers.V1;
+
+/// <summary>
+/// Clients endpoint of TimeTracker API.
+/// </summary>
+[ApiController]
+[ApiVersion("1", Deprecated = true)]
+[Authorize]
+[Route("/api/v{version:apiVersion}/clients")]
+public class ClientsController : Controller
 {
+    private readonly TimeTrackerDbContext _dbContext;
+    private readonly ILogger<ClientsController> _logger;
+
     /// <summary>
-    /// Clients endpoint of TimeTracker API.
+    /// Creates a new instance of <see cref="ClientsController"/> with given dependencies.
     /// </summary>
-    [ApiController]
-    [ApiVersion("1", Deprecated = true)]
-    [Authorize]
-    [Route("/api/v{version:apiVersion}/clients")]
-    public class ClientsController : Controller
+    /// <param name="dbContext">DB context instance.</param>
+    /// <param name="logger">Logger instance.</param>
+    public ClientsController(TimeTrackerDbContext dbContext, ILogger<ClientsController> logger)
     {
-        private readonly TimeTrackerDbContext _dbContext;
-        private readonly ILogger<ClientsController> _logger;
+        _dbContext = dbContext;
+        _logger = logger;
+    }
 
-        /// <summary>
-        /// Creates a new instance of <see cref="ClientsController"/> with given dependencies.
-        /// </summary>
-        /// <param name="dbContext">DB context instance.</param>
-        /// <param name="logger">Logger instance.</param>
-        public ClientsController(TimeTrackerDbContext dbContext, ILogger<ClientsController> logger)
+    /// <summary>
+    /// Get a single client by id.
+    /// </summary>
+    /// <param name="id">Id of the client to retrieve.</param>
+    [HttpGet("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ClientModel))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ClientModel>> GetById(long id)
+    {
+        _logger.LogDebug($"Getting a client with id {id}");
+
+        var client = await _dbContext.Clients.FindAsync(id);
+
+        if (client == null)
         {
-            _dbContext = dbContext;
-            _logger = logger;
+            return NotFound();
         }
 
-        /// <summary>
-        /// Get a single client by id.
-        /// </summary>
-        /// <param name="id">Id of the client to retrieve.</param>
-        [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ClientModel))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ClientModel>> GetById(long id)
+        return ClientModel.FromClient(client);
+    }
+
+    /// <summary>
+    /// Get one page of clients.
+    /// </summary>
+    /// <param name="page">Page number.</param>
+    /// <param name="size">Page size.</param>
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PagedList<ClientModel>))]
+    public async Task<ActionResult<PagedList<ClientModel>>> GetPage(int page = 1, int size = 5)
+    {
+        _logger.LogDebug($"Getting a page {page} of clients with page size {size}");
+
+        var clients = await _dbContext.Clients
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync();
+
+        return new PagedList<ClientModel>
         {
-            _logger.LogDebug($"Getting a client with id {id}");
+            Items = clients.Select(ClientModel.FromClient),
+            Page = page,
+            PageSize = size,
+            TotalCount = await _dbContext.Clients.CountAsync()
+        };
+    }
 
-            var client = await _dbContext.Clients.FindAsync(id);
+    /// <summary>
+    /// Delete a single client with the given id.
+    /// </summary>
+    /// <param name="id">Id of the client to delete.</param>
+    [Authorize(Roles = "admin")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(long id)
+    {
+        _logger.LogDebug($"Deleting client with id {id}");
 
-            if (client == null)
-            {
-                return NotFound();
-            }
+        var client = await _dbContext.Clients.FindAsync(id);
 
-            return ClientModel.FromClient(client);
+        if (client == null)
+        {
+            return NotFound();
         }
 
-        /// <summary>
-        /// Get one page of clients.
-        /// </summary>
-        /// <param name="page">Page number.</param>
-        /// <param name="size">Page size.</param>
-        [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PagedList<ClientModel>))]
-        public async Task<ActionResult<PagedList<ClientModel>>> GetPage(int page = 1, int size = 5)
+        _dbContext.Clients.Remove(client);
+        await _dbContext.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Create a new client from the supplied data.
+    /// </summary>
+    /// <param name="model">Data to create the client from.</param>
+    [Authorize(Roles = "admin")]
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(ClientModel))]
+    public async Task<ActionResult<ClientModel>> Create(ClientInputModel model)
+    {
+        _logger.LogDebug($"Creating a new client with name {model.Name}");
+
+        var client = new Client();
+        model.MapTo(client);
+
+        await _dbContext.Clients.AddAsync(client);
+        await _dbContext.SaveChangesAsync();
+
+        var resultModel = ClientModel.FromClient(client);
+
+        return CreatedAtAction(nameof(GetById), "clients", new {id = client.Id, version = "1"}, resultModel);
+    }
+
+    /// <summary>
+    /// Modify the client with the given id, using the supplied data.
+    /// </summary>
+    /// <param name="id">Id of the client to modify.</param>
+    /// <param name="model">Data to modify the client from.</param>
+    [Authorize(Roles = "admin")]
+    [HttpPut("{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ClientModel))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ClientModel>> Update(long id, ClientInputModel model)
+    {
+        _logger.LogDebug($"Updating client with id {id}");
+
+        var client = await _dbContext.Clients.FindAsync(id);
+
+        if (client == null)
         {
-            _logger.LogDebug($"Getting a page {page} of clients with page size {size}");
-
-            var clients = await _dbContext.Clients
-                .Skip((page - 1) * size)
-                .Take(size)
-                .ToListAsync();
-
-            return new PagedList<ClientModel>
-            {
-                Items = clients.Select(ClientModel.FromClient),
-                Page = page,
-                PageSize = size,
-                TotalCount = await _dbContext.Clients.CountAsync()
-            };
+            return NotFound();
         }
 
-        /// <summary>
-        /// Delete a single client with the given id.
-        /// </summary>
-        /// <param name="id">Id of the client to delete.</param>
-        [Authorize(Roles = "admin")]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(long id)
-        {
-            _logger.LogDebug($"Deleting client with id {id}");
+        model.MapTo(client);
 
-            var client = await _dbContext.Clients.FindAsync(id);
+        _dbContext.Clients.Update(client);
+        await _dbContext.SaveChangesAsync();
 
-            if (client == null)
-            {
-                return NotFound();
-            }
-
-            _dbContext.Clients.Remove(client);
-            await _dbContext.SaveChangesAsync();
-
-            return Ok();
-        }
-
-        /// <summary>
-        /// Create a new client from the supplied data.
-        /// </summary>
-        /// <param name="model">Data to create the client from.</param>
-        [Authorize(Roles = "admin")]
-        [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(ClientModel))]
-        public async Task<ActionResult<ClientModel>> Create(ClientInputModel model)
-        {
-            _logger.LogDebug($"Creating a new client with name {model.Name}");
-
-            var client = new Client();
-            model.MapTo(client);
-
-            await _dbContext.Clients.AddAsync(client);
-            await _dbContext.SaveChangesAsync();
-
-            var resultModel = ClientModel.FromClient(client);
-
-            return CreatedAtAction(nameof(GetById), "clients", new {id = client.Id, version = "1"}, resultModel);
-        }
-
-        /// <summary>
-        /// Modify the client with the given id, using the supplied data.
-        /// </summary>
-        /// <param name="id">Id of the client to modify.</param>
-        /// <param name="model">Data to modify the client from.</param>
-        [Authorize(Roles = "admin")]
-        [HttpPut("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ClientModel))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<ClientModel>> Update(long id, ClientInputModel model)
-        {
-            _logger.LogDebug($"Updating client with id {id}");
-
-            var client = await _dbContext.Clients.FindAsync(id);
-
-            if (client == null)
-            {
-                return NotFound();
-            }
-
-            model.MapTo(client);
-
-            _dbContext.Clients.Update(client);
-            await _dbContext.SaveChangesAsync();
-
-            return ClientModel.FromClient(client);
-        }
+        return ClientModel.FromClient(client);
     }
 }

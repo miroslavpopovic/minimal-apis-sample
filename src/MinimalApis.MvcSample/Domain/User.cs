@@ -1,14 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MinimalApis.MvcSample.Domain
+namespace MinimalApis.MvcSample.Domain;
+
+public class User
 {
-    public class User
-    {
-        public long Id { get; set; }
+    public long Id { get; set; }
 
-        [Required]
-        public string Name { get; set; }
+    [Required]
+    public string Name { get; set; }
 
-        public decimal HourRate { get; set; }
-    }
+    public decimal HourRate { get; set; }
 }

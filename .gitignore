@@ -340,4 +340,4 @@ ASALocalRun/
 healthchecksdb
 
 # Custom files
-src/MinimalApis.MvcSample/app.db-*
+app.db-*

@@ -1,14 +1,13 @@
 ﻿using FluentValidation;
 
-namespace MinimalApis.MvcSample.Models.Validation
+namespace MinimalApis.MvcSample.Models.Validation;
+
+public class ClientInputModelValidator : AbstractValidator<ClientInputModel>
 {
-    public class ClientInputModelValidator : AbstractValidator<ClientInputModel>
+    public ClientInputModelValidator()
     {
-        public ClientInputModelValidator()
-        {
-            RuleFor(x => x.Name)
-                .NotEmpty()
-                .Length(1, 100);
-        }
+        RuleFor(x => x.Name)
+            .NotEmpty()
+            .Length(1, 100);
     }
 }

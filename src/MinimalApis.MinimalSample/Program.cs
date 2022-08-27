@@ -1,5 +1,8 @@
+using System.Threading.RateLimiting;
 using FluentValidation;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Primitives;
 using MinimalApis.MinimalSample.Data;
 using MinimalApis.MinimalSample.Domain;
 using MinimalApis.MinimalSample.Extensions;
@@ -39,6 +42,31 @@ app.UseCors(policyBuilder => policyBuilder
     .AllowAnyOrigin()
     .AllowAnyMethod()
     .AllowAnyHeader());
+
+// https://devblogs.microsoft.com/dotnet/announcing-rate-limiting-for-dotnet/#ratelimiting-middleware
+app.UseRateLimiter(new RateLimiterOptions
+    {
+        OnRejected = (context, _) =>
+        {
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            return new ValueTask();
+        }
+        //GlobalLimiter = new ConcurrencyLimiter(...)
+    }
+    .AddConcurrencyLimiter("get", new ConcurrencyLimiterOptions(2, QueueProcessingOrder.OldestFirst, 2))
+    .AddNoLimiter("users")
+    .AddPolicy("modify", context =>
+    {
+        // This is just a sample on how to use partitioning per request parameters
+        if (!StringValues.IsNullOrEmpty(context.Request.Headers["token"]))
+        {
+            return RateLimitPartition.CreateTokenBucketLimiter("token", _ =>
+                new TokenBucketRateLimiterOptions(5, QueueProcessingOrder.OldestFirst, 1, TimeSpan.FromSeconds(5), 1));
+        }
+
+        return RateLimitPartition.CreateFixedWindowLimiter("default", _ =>
+                new FixedWindowRateLimiterOptions(1, QueueProcessingOrder.OldestFirst, 1, TimeSpan.FromSeconds(5)));
+    }));
 
 async Task<PagedList<ClientModel>> GetClients(
     TimeTrackerDbContext dbContext, ILogger<Program> logger, int page = 1, int size = 5)
@@ -377,6 +405,7 @@ async Task<TimeEntryModel[]> GetTimeEntriesByUserAndMonth(
 
 app.MapGet("/api/v1/time-entries", GetTimeEntries)
     .Produces<PagedList<TimeEntryModel>>()
+    .RequireRateLimiting("get")
     .WithName("GetTimeEntries")
     .WithSummary("Get a paged list of time entries.")
     .WithDescription("Gets one page of the available time entries.")
@@ -390,6 +419,7 @@ app.MapGet("/api/v1/time-entries", GetTimeEntries)
 
 app.MapGet("/api/v1/time-entries/{userId:long}/{year:int}/{month:int}", GetTimeEntriesByUserAndMonth)
     .Produces<TimeEntryModel[]>()
+    .RequireRateLimiting("get")
     .WithName("GetTimeEntriesByUserAndMonth")
     .WithSummary("Get a list of time entries for user and month.")
     .WithDescription("Gets a list of time entries for a specified user and month.")
@@ -418,6 +448,7 @@ app.MapGet("/api/v1/time-entries/{id:long}",
     })
     .Produces<TimeEntryModel>()
     .Produces(StatusCodes.Status404NotFound)
+    .RequireRateLimiting("get")
     .WithName("GetTimeEntry")
     .WithSummary("Get a time entry by id.")
     .WithDescription("Gets a single time entry by id value.")
@@ -448,6 +479,7 @@ app.MapDelete("/api/v1/time-entries/{id:long}",
     .Produces(StatusCodes.Status200OK)
     .Produces(StatusCodes.Status404NotFound)
     .RequireAuthorization("AdminPolicy")
+    .RequireRateLimiting("modify")
     .WithName("DeleteTimeEntry")
     .WithSummary("Delete a time entry by id.")
     .WithDescription("Deletes a single time entry by id value.")
@@ -487,6 +519,7 @@ app.MapPost("/api/v1/time-entries",
     })
     .Produces<TimeEntryModel>(StatusCodes.Status201Created)
     .RequireAuthorization("AdminPolicy")
+    .RequireRateLimiting("modify")
     .WithName("CreateTimeEntry")
     .WithSummary("Create a new time entry.")
     .WithTags("TimeEntries")
@@ -518,6 +551,7 @@ app.MapPut("/api/v1/time-entries/{id:long}",
     .Produces<TimeEntryModel>()
     .Produces(StatusCodes.Status404NotFound)
     .RequireAuthorization("AdminPolicy")
+    .RequireRateLimiting("modify")
     .WithName("UpdateTimeEntry")
     .WithSummary("Update a time entry by id.")
     .WithDescription("Updates a time entry with the given id, using the supplied data.")

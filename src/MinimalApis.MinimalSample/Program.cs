@@ -670,3 +670,6 @@ app.MapPut("/api/v1/users/{id:long}",
     });
 
 app.Run();
+
+// Necessary to make Program class accessible in tests
+public partial class Program { }

@@ -5,7 +5,9 @@ VisualStudioVersion = 17.4.32804.182
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinimalApis.MvcSample", "src\MinimalApis.MvcSample\MinimalApis.MvcSample.csproj", "{CAE995C5-F199-4518-BB01-C7253C32E475}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalApis.MinimalSample", "src\MinimalApis.MinimalSample\MinimalApis.MinimalSample.csproj", "{BDC0EF63-D8BE-4981-A68D-B558BCF7ACED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinimalApis.MinimalSample", "src\MinimalApis.MinimalSample\MinimalApis.MinimalSample.csproj", "{BDC0EF63-D8BE-4981-A68D-B558BCF7ACED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalApis.MinimalSample.Tests", "tests\MinimalApis.MinimalSample.Tests\MinimalApis.MinimalSample.Tests.csproj", "{0B64D078-B585-4B78-8349-B9778BF3485A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{BDC0EF63-D8BE-4981-A68D-B558BCF7ACED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDC0EF63-D8BE-4981-A68D-B558BCF7ACED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDC0EF63-D8BE-4981-A68D-B558BCF7ACED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B64D078-B585-4B78-8349-B9778BF3485A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B64D078-B585-4B78-8349-B9778BF3485A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B64D078-B585-4B78-8349-B9778BF3485A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B64D078-B585-4B78-8349-B9778BF3485A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

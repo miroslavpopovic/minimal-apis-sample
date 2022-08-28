@@ -1,0 +1,25 @@
+﻿using FluentValidation;
+
+namespace MinimalApis.MinimalSample;
+
+public class ValidationFilter<T> : IEndpointFilter where T : class
+{
+    private readonly IValidator<T> validator;
+    public ValidationFilter(IValidator<T> validator) => this.validator = validator;
+
+    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    {
+        if (context.Arguments.SingleOrDefault(p => p.GetType() == typeof(T)) is not T validatable)
+        {
+            return Results.BadRequest("Could not find validatable object.");
+        }
+
+        var validationResult = await validator.ValidateAsync(validatable);
+        if (!validationResult.IsValid)
+        {
+            return Results.ValidationProblem(validationResult.ToDictionary());
+        }
+
+        return await next(context);
+    }
+}

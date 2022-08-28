@@ -1,8 +1,10 @@
 using System.Threading.RateLimiting;
 using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
+using MinimalApis.MinimalSample;
 using MinimalApis.MinimalSample.Data;
 using MinimalApis.MinimalSample.Domain;
 using MinimalApis.MinimalSample.Extensions;
@@ -168,33 +170,42 @@ app.MapPost("/api/v1/clients",
 
         return Results.CreatedAtRoute("GetClient", new {id = client.Id}, resultModel);
     })
+    .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
     .Produces<ClientModel>(StatusCodes.Status201Created)
+    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
     .RequireAuthorization("AdminPolicy")
     .WithName("CreateClient")
     .WithSummary("Create a new client.")
     .WithTags("Clients")
-    .WithDescription("Creates a new client with supplied values.");
+    .WithDescription("Creates a new client with supplied values.")
+    .WithOpenApi(operation =>
+    {
+        operation.Parameters.RemoveAt(0);
+        return operation;
+    });
 
 app.MapPut("/api/v1/clients/{id:long}",
-        async (long id, ClientInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    async (long id, ClientInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    {
+        logger.LogDebug("Updating a client with id {Id}", id);
+
+        var client = await dbContext.Clients!.FindAsync(id);
+
+        if (client == null)
         {
-            logger.LogDebug("Updating a client with id {Id}", id);
+            return Results.NotFound();
+        }
 
-            var client = await dbContext.Clients!.FindAsync(id);
+        model.MapTo(client);
 
-            if (client == null)
-            {
-                return Results.NotFound();
-            }
+        dbContext.Clients.Update(client);
+        await dbContext.SaveChangesAsync();
 
-            model.MapTo(client);
-
-            dbContext.Clients.Update(client);
-            await dbContext.SaveChangesAsync();
-
-            return Results.Ok(ClientModel.FromClient(client));
-        })
+        return Results.Ok(ClientModel.FromClient(client));
+    })
+    .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
     .Produces<ClientModel>()
+    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
     .Produces(StatusCodes.Status404NotFound)
     .RequireAuthorization("AdminPolicy")
     .WithName("UpdateClient")
@@ -317,35 +328,44 @@ app.MapPost("/api/v1/projects",
 
         return Results.CreatedAtRoute("GetProject", new {id = project.Id}, resultModel);
     })
+    .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
     .Produces<ProjectModel>(StatusCodes.Status201Created)
+    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
     .RequireAuthorization("AdminPolicy")
     .WithName("CreateProject")
     .WithSummary("Create a new project.")
     .WithTags("Projects")
-    .WithDescription("Creates a new project with supplied values.");
+    .WithDescription("Creates a new project with supplied values.")
+    .WithOpenApi(operation =>
+    {
+        operation.Parameters.RemoveAt(0);
+        return operation;
+    });
 
 app.MapPut("/api/v1/projects/{id:long}",
-        async (long id, ProjectInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    async (long id, ProjectInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    {
+        logger.LogDebug("Updating a project with id {Id}", id);
+
+        var project = await dbContext.Projects!.FindAsync(id);
+        var client = await dbContext.Clients!.FindAsync(model.ClientId);
+
+        if (project == null || client == null)
         {
-            logger.LogDebug("Updating a project with id {Id}", id);
+            return Results.NotFound();
+        }
 
-            var project = await dbContext.Projects!.FindAsync(id);
-            var client = await dbContext.Clients!.FindAsync(model.ClientId);
+        project.Client = client;
+        model.MapTo(project);
 
-            if (project == null || client == null)
-            {
-                return Results.NotFound();
-            }
+        dbContext.Projects.Update(project);
+        await dbContext.SaveChangesAsync();
 
-            project.Client = client;
-            model.MapTo(project);
-
-            dbContext.Projects.Update(project);
-            await dbContext.SaveChangesAsync();
-
-            return Results.Ok(ProjectModel.FromProject(project));
-        })
+        return Results.Ok(ProjectModel.FromProject(project));
+    })
+    .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
     .Produces<ProjectModel>()
+    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
     .Produces(StatusCodes.Status404NotFound)
     .RequireAuthorization("AdminPolicy")
     .WithName("UpdateProject")
@@ -517,38 +537,47 @@ app.MapPost("/api/v1/time-entries",
 
         return Results.CreatedAtRoute("GetTimeEntry", new { id = timeEntry.Id }, resultModel);
     })
+    .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
     .Produces<TimeEntryModel>(StatusCodes.Status201Created)
+    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
     .RequireAuthorization("AdminPolicy")
     .RequireRateLimiting("modify")
     .WithName("CreateTimeEntry")
     .WithSummary("Create a new time entry.")
     .WithTags("TimeEntries")
-    .WithDescription("Creates a new time entry with supplied values.");
+    .WithDescription("Creates a new time entry with supplied values.")
+    .WithOpenApi(operation =>
+    {
+        operation.Parameters.RemoveAt(0);
+        return operation;
+    });
 
 app.MapPut("/api/v1/time-entries/{id:long}",
-        async (long id, TimeEntryInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    async (long id, TimeEntryInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    {
+        logger.LogDebug("Updating a time entry with id {Id}", id);
+
+        var timeEntry = await dbContext.TimeEntries!
+            .Include(x => x.User)
+            .Include(x => x.Project)
+            .Include(x => x.Project.Client)
+            .SingleOrDefaultAsync(x => x.Id == id);
+
+        if (timeEntry == null)
         {
-            logger.LogDebug("Updating a time entry with id {Id}", id);
+            return Results.NotFound();
+        }
 
-            var timeEntry = await dbContext.TimeEntries!
-                .Include(x => x.User)
-                .Include(x => x.Project)
-                .Include(x => x.Project.Client)
-                .SingleOrDefaultAsync(x => x.Id == id);
+        model.MapTo(timeEntry);
 
-            if (timeEntry == null)
-            {
-                return Results.NotFound();
-            }
+        dbContext.TimeEntries!.Update(timeEntry);
+        await dbContext.SaveChangesAsync();
 
-            model.MapTo(timeEntry);
-
-            dbContext.TimeEntries!.Update(timeEntry);
-            await dbContext.SaveChangesAsync();
-
-            return Results.Ok(TimeEntryModel.FromTimeEntry(timeEntry));
-        })
+        return Results.Ok(TimeEntryModel.FromTimeEntry(timeEntry));
+    })
+    .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
     .Produces<TimeEntryModel>()
+    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
     .Produces(StatusCodes.Status404NotFound)
     .RequireAuthorization("AdminPolicy")
     .RequireRateLimiting("modify")
@@ -661,35 +690,44 @@ app.MapPost("/api/v1/users",
 
         var resultModel = UserModel.FromUser(user);
 
-        return Results.CreatedAtRoute("GetUsers", new {id = user.Id}, resultModel);
+        return Results.CreatedAtRoute("GetUsers", new { id = user.Id }, resultModel);
     })
+    .AddEndpointFilter<ValidationFilter<UserInputModel>>()
     .Produces<UserModel>(StatusCodes.Status201Created)
+    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
     .RequireAuthorization("AdminPolicy")
     .WithName("CreateUser")
     .WithSummary("Create a new user.")
     .WithTags("Users")
-    .WithDescription("Creates a new user with supplied values.");
+    .WithDescription("Creates a new user with supplied values.")
+    .WithOpenApi(operation =>
+    {
+        operation.Parameters.RemoveAt(0);
+        return operation;
+    });
 
 app.MapPut("/api/v1/users/{id:long}",
-        async (long id, UserInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    async (long id, UserInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    {
+        logger.LogDebug("Updating a user with id {Id}", id);
+
+        var user = await dbContext.Users!.FindAsync(id);
+
+        if (user == null)
         {
-            logger.LogDebug("Updating a user with id {Id}", id);
+            return Results.NotFound();
+        }
 
-            var user = await dbContext.Users!.FindAsync(id);
+        model.MapTo(user);
 
-            if (user == null)
-            {
-                return Results.NotFound();
-            }
+        dbContext.Users.Update(user);
+        await dbContext.SaveChangesAsync();
 
-            model.MapTo(user);
-
-            dbContext.Users.Update(user);
-            await dbContext.SaveChangesAsync();
-
-            return Results.Ok(UserModel.FromUser(user));
-        })
+        return Results.Ok(UserModel.FromUser(user));
+    })
+    .AddEndpointFilter<ValidationFilter<UserInputModel>>()
     .Produces<UserModel>()
+    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
     .Produces(StatusCodes.Status404NotFound)
     .RequireAuthorization("AdminPolicy")
     .WithName("UpdateUser")

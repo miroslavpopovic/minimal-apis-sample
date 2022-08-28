@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using MinimalApis.MinimalSample.Models;
 
 namespace MinimalApis.MinimalSample.Tests;
@@ -27,41 +26,27 @@ public class UserApiTests : IAsyncLifetime
     [Fact]
     public async Task Get_users_returns_a_page_of_users()
     {
-        var result = await _client.GetAsync("/api/v1/users?page=2&size=10");
+        var users = await _client.GetFromJsonAsync<PagedList<UserModel>>("/api/v1/users?page=2&size=10");
 
-        Assert.Equal(HttpStatusCode.OK, result.StatusCode);
-
-        var response = await result.Content.ReadAsStringAsync();
-        var pagedResponse = JsonSerializer.Deserialize<PagedList<UserModel>>(response, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        })!;
-
-        Assert.Equal(2, pagedResponse.Page);
-        Assert.Equal(10, pagedResponse.PageSize);
-        Assert.Equal(10, pagedResponse.Items.Count());
+        Assert.Equal(2, users!.Page);
+        Assert.Equal(10, users.PageSize);
+        Assert.Equal(10, users.Items.Count());
     }
 
     [Fact]
     public async Task Get_user_returns_a_single_user_for_existing_user_id()
     {
-        var result = await _client.GetAsync($"/api/v1/users/1");
-
-        Assert.Equal(HttpStatusCode.OK, result.StatusCode);
-
-        var response = await result.Content.ReadAsStringAsync();
-        var user = JsonSerializer.Deserialize<UserModel>(response, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        })!;
+        var user = await _client.GetFromJsonAsync<UserModel>("/api/v1/users/1");
 
         Assert.NotNull(user);
+        Assert.Equal(1, user.Id);
+        Assert.NotEmpty(user.Name);
     }
 
     [Fact]
     public async Task Get_user_returns_not_found_for_wrong_id()
     {
-        var result = await _client.GetAsync($"/api/v1/users/0");
+        var result = await _client.GetAsync("/api/v1/users/0");
 
         Assert.Equal(HttpStatusCode.NotFound, result.StatusCode);
     }
@@ -95,13 +80,9 @@ public class UserApiTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.Created, result.StatusCode);
 
-        var response = await result.Content.ReadAsStringAsync();
-        var user = JsonSerializer.Deserialize<UserModel>(response, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        })!;
+        var user = await result.Content.ReadFromJsonAsync<UserModel>();
 
-        Assert.Equal($"http://localhost/api/v1/users?id={user.Id}", result.Headers.First().Value.First());
+        Assert.Equal($"http://localhost/api/v1/users?id={user!.Id}", result.Headers.First().Value.First());
         Assert.Equal(model.Name, user.Name);
         Assert.Equal(model.HourRate, user.HourRate);
     }
@@ -115,7 +96,7 @@ public class UserApiTests : IAsyncLifetime
             HourRate = 123
         };
 
-        var result = await _client.PutAsJsonAsync($"/api/v1/users/0", model);
+        var result = await _client.PutAsJsonAsync("/api/v1/users/0", model);
 
         Assert.Equal(HttpStatusCode.NotFound, result.StatusCode);
     }
@@ -129,17 +110,13 @@ public class UserApiTests : IAsyncLifetime
             HourRate = 123
         };
 
-        var result = await _client.PutAsJsonAsync($"/api/v1/users/1", model);
+        var result = await _client.PutAsJsonAsync("/api/v1/users/1", model);
 
         Assert.Equal(HttpStatusCode.OK, result.StatusCode);
 
-        var response = await result.Content.ReadAsStringAsync();
-        var user = JsonSerializer.Deserialize<UserModel>(response, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        })!;
+        var user = await result.Content.ReadFromJsonAsync<UserModel>();
 
-        Assert.Equal(model.Name, user.Name);
+        Assert.Equal(model.Name, user!.Name);
         Assert.Equal(model.HourRate, user.HourRate);
     }
 }

@@ -1,6 +1,5 @@
 using System.Threading.RateLimiting;
 using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
@@ -172,7 +171,7 @@ app.MapPost("/api/v1/clients",
     })
     .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
     .Produces<ClientModel>(StatusCodes.Status201Created)
-    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+    .ProducesValidationProblem()
     .RequireAuthorization("AdminPolicy")
     .WithName("CreateClient")
     .WithSummary("Create a new client.")
@@ -205,7 +204,7 @@ app.MapPut("/api/v1/clients/{id:long}",
     })
     .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
     .Produces<ClientModel>()
-    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+    .ProducesValidationProblem()
     .Produces(StatusCodes.Status404NotFound)
     .RequireAuthorization("AdminPolicy")
     .WithName("UpdateClient")
@@ -330,7 +329,7 @@ app.MapPost("/api/v1/projects",
     })
     .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
     .Produces<ProjectModel>(StatusCodes.Status201Created)
-    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+    .ProducesValidationProblem()
     .RequireAuthorization("AdminPolicy")
     .WithName("CreateProject")
     .WithSummary("Create a new project.")
@@ -365,7 +364,7 @@ app.MapPut("/api/v1/projects/{id:long}",
     })
     .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
     .Produces<ProjectModel>()
-    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+    .ProducesValidationProblem()
     .Produces(StatusCodes.Status404NotFound)
     .RequireAuthorization("AdminPolicy")
     .WithName("UpdateProject")
@@ -539,7 +538,7 @@ app.MapPost("/api/v1/time-entries",
     })
     .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
     .Produces<TimeEntryModel>(StatusCodes.Status201Created)
-    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+    .ProducesValidationProblem()
     .RequireAuthorization("AdminPolicy")
     .RequireRateLimiting("modify")
     .WithName("CreateTimeEntry")
@@ -577,7 +576,7 @@ app.MapPut("/api/v1/time-entries/{id:long}",
     })
     .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
     .Produces<TimeEntryModel>()
-    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+    .ProducesValidationProblem()
     .Produces(StatusCodes.Status404NotFound)
     .RequireAuthorization("AdminPolicy")
     .RequireRateLimiting("modify")
@@ -694,7 +693,7 @@ app.MapPost("/api/v1/users",
     })
     .AddEndpointFilter<ValidationFilter<UserInputModel>>()
     .Produces<UserModel>(StatusCodes.Status201Created)
-    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+    .ProducesValidationProblem()
     .RequireAuthorization("AdminPolicy")
     .WithName("CreateUser")
     .WithSummary("Create a new user.")
@@ -727,7 +726,7 @@ app.MapPut("/api/v1/users/{id:long}",
     })
     .AddEndpointFilter<ValidationFilter<UserInputModel>>()
     .Produces<UserModel>()
-    .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+    .ProducesValidationProblem()
     .Produces(StatusCodes.Status404NotFound)
     .RequireAuthorization("AdminPolicy")
     .WithName("UpdateUser")

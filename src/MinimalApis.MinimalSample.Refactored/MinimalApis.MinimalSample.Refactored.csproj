@@ -8,11 +8,12 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <DocumentationFile>bin\Debug\net7.0\MinimalApis.MinimalSample.xml</DocumentationFile>
+        <DocumentationFile>bin\Debug\net7.0\MinimalApis.MinimalSample.Refactored.xml</DocumentationFile>
         <NoWarn>1701;1702;1591</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Carter" Version="6.1.1" />
         <PackageReference Include="FakeAuth" Version="2.0.0" />
         <PackageReference Include="FluentValidation.AspNetCore" Version="11.2.1" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.8" />

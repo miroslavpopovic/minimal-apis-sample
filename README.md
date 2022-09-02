@@ -2,6 +2,10 @@
 
 This is a sample code for the presentation "Minimal APIs in ASP.NET Core 6+".
 
+## Presentations
+
+- [September 2022, KulenDayz, Osijek](2022-09-kulendayz-minimal-apis.pptx)
+
 ## Solution organization
 
 There are three sample projects in a solution and one test project.

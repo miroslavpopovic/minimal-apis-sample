@@ -77,11 +77,7 @@ public class TimeEntriesModule : ICarterModule
             .WithSummary("Create a new time entry.")
             .WithTags("TimeEntries")
             .WithDescription("Creates a new time entry with supplied values.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters.RemoveAt(0);
-                return operation;
-            });
+            .WithOpenApi();
 
         app.MapPut("/api/v1/time-entries/{id:long}", UpdateTimeEntry)
             .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
@@ -97,7 +93,6 @@ public class TimeEntriesModule : ICarterModule
             .WithOpenApi(operation =>
             {
                 operation.Parameters[0].Description = "Id of the time entry to update.";
-                operation.Parameters.RemoveAt(1);
                 return operation;
             });
     }

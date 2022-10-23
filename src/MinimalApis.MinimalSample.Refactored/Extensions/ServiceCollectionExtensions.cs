@@ -1,7 +1,10 @@
 ﻿using System.Reflection;
 using System.Security.Claims;
+using System.Threading.RateLimiting;
 using FakeAuth;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Primitives;
 using Microsoft.OpenApi.Models;
 
 namespace MinimalApis.MinimalSample.Refactored.Extensions;
@@ -28,6 +31,43 @@ public static class ServiceCollectionExtensions
 
                 options.AddPolicy("AdminPolicy", builder => builder.RequireRole("Admin"));
             });
+
+    public static void AddDemoRateLimiter(this IServiceCollection services) =>
+        services.AddRateLimiter(options =>
+        {
+            options.OnRejected = (context, _) =>
+            {
+                context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                return new ValueTask();
+            };
+
+            options
+                .AddConcurrencyLimiter("get", limiterOptions =>
+                {
+                    limiterOptions.PermitLimit = 2;
+                    limiterOptions.QueueLimit = 2;
+                    limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                })
+                .AddPolicy("users", _ => RateLimitPartition.GetNoLimiter(string.Empty))
+                .AddPolicy("modify", context => StringValues.IsNullOrEmpty(context.Request.Headers["token"])
+                    ? RateLimitPartition.GetFixedWindowLimiter("default", _ =>
+                        new FixedWindowRateLimiterOptions
+                        {
+                            QueueLimit = 5,
+                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                            PermitLimit = 1,
+                            Window = TimeSpan.FromSeconds(5)
+                        })
+                    : RateLimitPartition.GetTokenBucketLimiter("token", _ =>
+                        new TokenBucketRateLimiterOptions
+                        {
+                            QueueLimit = 5,
+                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                            TokenLimit = 1,
+                            TokensPerPeriod = 1,
+                            ReplenishmentPeriod = TimeSpan.FromSeconds(5)
+                        }));
+        });
 
     public static void AddOpenApi(this IServiceCollection services) =>
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

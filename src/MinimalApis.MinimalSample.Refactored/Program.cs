@@ -1,9 +1,6 @@
-using System.Threading.RateLimiting;
 using Carter;
 using FluentValidation;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Primitives;
 using MinimalApis.MinimalSample.Refactored.Data;
 using MinimalApis.MinimalSample.Refactored.Extensions;
 
@@ -15,6 +12,7 @@ builder.Services.AddDbContext<TimeTrackerDbContext>(
 
 builder.Services.AddDemoAuthorization();
 builder.Services.AddDemoAuthentication();
+builder.Services.AddDemoRateLimiter();
 
 builder.Services.AddOpenApi();
 
@@ -44,30 +42,7 @@ app.UseCors(policyBuilder => policyBuilder
     .AllowAnyMethod()
     .AllowAnyHeader());
 
-// https://devblogs.microsoft.com/dotnet/announcing-rate-limiting-for-dotnet/#ratelimiting-middleware
-app.UseRateLimiter(new RateLimiterOptions
-    {
-        OnRejected = (context, _) =>
-        {
-            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-            return new ValueTask();
-        }
-        //GlobalLimiter = new ConcurrencyLimiter(...)
-    }
-    .AddConcurrencyLimiter("get", new ConcurrencyLimiterOptions(2, QueueProcessingOrder.OldestFirst, 2))
-    .AddNoLimiter("users")
-    .AddPolicy("modify", context =>
-    {
-        // This is just a sample on how to use partitioning per request parameters
-        if (!StringValues.IsNullOrEmpty(context.Request.Headers["token"]))
-        {
-            return RateLimitPartition.CreateTokenBucketLimiter("token", _ =>
-                new TokenBucketRateLimiterOptions(5, QueueProcessingOrder.OldestFirst, 1, TimeSpan.FromSeconds(5), 1));
-        }
-
-        return RateLimitPartition.CreateFixedWindowLimiter("default", _ =>
-            new FixedWindowRateLimiterOptions(1, QueueProcessingOrder.OldestFirst, 1, TimeSpan.FromSeconds(5)));
-    }));
+app.UseRateLimiter();
 
 app.MapCarter();
 

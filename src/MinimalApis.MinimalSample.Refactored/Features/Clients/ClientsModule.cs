@@ -58,11 +58,7 @@ public class ClientsModule : ICarterModule
             .WithSummary("Create a new client.")
             .WithTags("Clients")
             .WithDescription("Creates a new client with supplied values.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters.RemoveAt(0);
-                return operation;
-            });
+            .WithOpenApi();
 
         app.MapPut("/api/v1/clients/{id:long}", UpdateClient)
             .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
@@ -77,7 +73,6 @@ public class ClientsModule : ICarterModule
             .WithOpenApi(operation =>
             {
                 operation.Parameters[0].Description = "Id of the client to update.";
-                operation.Parameters.RemoveAt(1);
                 return operation;
             });
     }

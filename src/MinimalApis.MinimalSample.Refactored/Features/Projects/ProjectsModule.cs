@@ -58,11 +58,7 @@ public class ProjectsModule : ICarterModule
             .WithSummary("Create a new project.")
             .WithTags("Projects")
             .WithDescription("Creates a new project with supplied values.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters.RemoveAt(0);
-                return operation;
-            });
+            .WithOpenApi();
 
         app.MapPut("/api/v1/projects/{id:long}", UpdateProject)
             .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
@@ -77,7 +73,6 @@ public class ProjectsModule : ICarterModule
             .WithOpenApi(operation =>
             {
                 operation.Parameters[0].Description = "Id of the project to update.";
-                operation.Parameters.RemoveAt(1);
                 return operation;
             });
     }

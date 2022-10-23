@@ -1,8 +1,5 @@
-using System.Threading.RateLimiting;
 using FluentValidation;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Primitives;
 using MinimalApis.MinimalSample;
 using MinimalApis.MinimalSample.Data;
 using MinimalApis.MinimalSample.Domain;
@@ -17,6 +14,7 @@ builder.Services.AddDbContext<TimeTrackerDbContext>(
 
 builder.Services.AddDemoAuthorization();
 builder.Services.AddDemoAuthentication();
+builder.Services.AddDemoRateLimiter();
 
 builder.Services.AddOpenApi();
 
@@ -44,30 +42,7 @@ app.UseCors(policyBuilder => policyBuilder
     .AllowAnyMethod()
     .AllowAnyHeader());
 
-// https://devblogs.microsoft.com/dotnet/announcing-rate-limiting-for-dotnet/#ratelimiting-middleware
-app.UseRateLimiter(new RateLimiterOptions
-    {
-        OnRejected = (context, _) =>
-        {
-            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-            return new ValueTask();
-        }
-        //GlobalLimiter = new ConcurrencyLimiter(...)
-    }
-    .AddConcurrencyLimiter("get", new ConcurrencyLimiterOptions(2, QueueProcessingOrder.OldestFirst, 2))
-    .AddNoLimiter("users")
-    .AddPolicy("modify", context =>
-    {
-        // This is just a sample on how to use partitioning per request parameters
-        if (!StringValues.IsNullOrEmpty(context.Request.Headers["token"]))
-        {
-            return RateLimitPartition.CreateTokenBucketLimiter("token", _ =>
-                new TokenBucketRateLimiterOptions(5, QueueProcessingOrder.OldestFirst, 1, TimeSpan.FromSeconds(5), 1));
-        }
-
-        return RateLimitPartition.CreateFixedWindowLimiter("default", _ =>
-                new FixedWindowRateLimiterOptions(1, QueueProcessingOrder.OldestFirst, 1, TimeSpan.FromSeconds(5)));
-    }));
+app.UseRateLimiter();
 
 async Task<PagedList<ClientModel>> GetClients(
     TimeTrackerDbContext dbContext, ILogger<Program> logger, int page = 1, int size = 5)
@@ -177,11 +152,7 @@ app.MapPost("/api/v1/clients",
     .WithSummary("Create a new client.")
     .WithTags("Clients")
     .WithDescription("Creates a new client with supplied values.")
-    .WithOpenApi(operation =>
-    {
-        operation.Parameters.RemoveAt(0);
-        return operation;
-    });
+    .WithOpenApi();
 
 app.MapPut("/api/v1/clients/{id:long}",
     async (long id, ClientInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
@@ -214,7 +185,6 @@ app.MapPut("/api/v1/clients/{id:long}",
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the client to update.";
-        operation.Parameters.RemoveAt(1);
         return operation;
     });
 
@@ -335,11 +305,7 @@ app.MapPost("/api/v1/projects",
     .WithSummary("Create a new project.")
     .WithTags("Projects")
     .WithDescription("Creates a new project with supplied values.")
-    .WithOpenApi(operation =>
-    {
-        operation.Parameters.RemoveAt(0);
-        return operation;
-    });
+    .WithOpenApi();
 
 app.MapPut("/api/v1/projects/{id:long}",
     async (long id, ProjectInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
@@ -374,7 +340,6 @@ app.MapPut("/api/v1/projects/{id:long}",
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the project to update.";
-        operation.Parameters.RemoveAt(1);
         return operation;
     });
 
@@ -545,11 +510,7 @@ app.MapPost("/api/v1/time-entries",
     .WithSummary("Create a new time entry.")
     .WithTags("TimeEntries")
     .WithDescription("Creates a new time entry with supplied values.")
-    .WithOpenApi(operation =>
-    {
-        operation.Parameters.RemoveAt(0);
-        return operation;
-    });
+    .WithOpenApi();
 
 app.MapPut("/api/v1/time-entries/{id:long}",
     async (long id, TimeEntryInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
@@ -587,7 +548,6 @@ app.MapPut("/api/v1/time-entries/{id:long}",
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the time entry to update.";
-        operation.Parameters.RemoveAt(1);
         return operation;
     });
 
@@ -699,11 +659,7 @@ app.MapPost("/api/v1/users",
     .WithSummary("Create a new user.")
     .WithTags("Users")
     .WithDescription("Creates a new user with supplied values.")
-    .WithOpenApi(operation =>
-    {
-        operation.Parameters.RemoveAt(0);
-        return operation;
-    });
+    .WithOpenApi();
 
 app.MapPut("/api/v1/users/{id:long}",
     async (long id, UserInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
@@ -736,7 +692,6 @@ app.MapPut("/api/v1/users/{id:long}",
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the user to update.";
-        operation.Parameters.RemoveAt(1);
         return operation;
     });
 

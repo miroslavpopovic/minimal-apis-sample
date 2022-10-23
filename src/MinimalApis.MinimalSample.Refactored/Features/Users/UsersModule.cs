@@ -58,11 +58,7 @@ public class UsersModule : ICarterModule
             .WithSummary("Create a new user.")
             .WithTags("Users")
             .WithDescription("Creates a new user with supplied values.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters.RemoveAt(0);
-                return operation;
-            });
+            .WithOpenApi();
 
         app.MapPut("/api/v1/users/{id:long}", UpdateUser)
             .AddEndpointFilter<ValidationFilter<UserInputModel>>()
@@ -77,7 +73,6 @@ public class UsersModule : ICarterModule
             .WithOpenApi(operation =>
             {
                 operation.Parameters[0].Description = "Id of the user to update.";
-                operation.Parameters.RemoveAt(1);
                 return operation;
             });
     }

@@ -1,4 +1,5 @@
 ﻿using Carter;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using MinimalApis.MinimalSample.Refactored.Data;
 using MinimalApis.MinimalSample.Refactored.Features.Common;
@@ -9,13 +10,18 @@ public class TimeEntriesModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/v1/time-entries", GetTimeEntries)
-            .Produces<PagedList<TimeEntryModel>>()
+        var timeEntriesGroup = app.MapGroup("/api/v1/time-entries")
+            .WithTags("TimeEntries");
+        var timeEntriesAdminGroup = timeEntriesGroup.MapGroup("/")
+            .RequireAuthorization("AdminPolicy")
+            .RequireRateLimiting("modify");
+
+        timeEntriesGroup
+            .MapGet("/", GetTimeEntries)
             .RequireRateLimiting("get")
             .WithName(nameof(GetTimeEntries))
             .WithSummary("Get a paged list of time entries.")
             .WithDescription("Gets one page of the available time entries.")
-            .WithTags("TimeEntries")
             .WithOpenApi(operation =>
             {
                 operation.Parameters[0].Description = "Page number.";
@@ -23,13 +29,12 @@ public class TimeEntriesModule : ICarterModule
                 return operation;
             });
 
-        app.MapGet("/api/v1/time-entries/{userId:long}/{year:int}/{month:int}", GetTimeEntriesByUserAndMonth)
-            .Produces<TimeEntryModel[]>()
+        timeEntriesGroup
+            .MapGet("/{userId:long}/{year:int}/{month:int}", GetTimeEntriesByUserAndMonth)
             .RequireRateLimiting("get")
             .WithName(nameof(GetTimeEntriesByUserAndMonth))
             .WithSummary("Get a list of time entries for user and month.")
             .WithDescription("Gets a list of time entries for a specified user and month.")
-            .WithTags("TimeEntries")
             .WithOpenApi(operation =>
             {
                 operation.Parameters[0].Description = "Id of the user to retrieve time entries for.";
@@ -38,58 +43,43 @@ public class TimeEntriesModule : ICarterModule
                 return operation;
             });
 
-        app.MapGet("/api/v1/time-entries/{id:long}", GetTimeEntry)
-            .Produces<TimeEntryModel>()
-            .Produces(StatusCodes.Status404NotFound)
+        timeEntriesGroup
+            .MapGet("/{id:long}", GetTimeEntry)
             .RequireRateLimiting("get")
             .WithName(nameof(GetTimeEntry))
             .WithSummary("Get a time entry by id.")
             .WithDescription("Gets a single time entry by id value.")
-            .WithTags("TimeEntries")
             .WithOpenApi(operation =>
             {
                 operation.Parameters[0].Description = "Id of the time entry to retrieve.";
                 return operation;
             });
 
-        app.MapDelete("/api/v1/time-entries/{id:long}", DeleteTimeEntry)
-            .Produces(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status404NotFound)
-            .RequireAuthorization("AdminPolicy")
-            .RequireRateLimiting("modify")
+        timeEntriesAdminGroup
+            .MapDelete("/{id:long}", DeleteTimeEntry)
             .WithName(nameof(DeleteTimeEntry))
             .WithSummary("Delete a time entry by id.")
             .WithDescription("Deletes a single time entry by id value.")
-            .WithTags("TimeEntries")
             .WithOpenApi(operation =>
             {
                 operation.Parameters[0].Description = "Id of the time entry to delete.";
                 return operation;
             });
 
-        app.MapPost("/api/v1/time-entries", CreateTimeEntry)
+        timeEntriesAdminGroup
+            .MapPost("/", CreateTimeEntry)
             .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
-            .Produces<TimeEntryModel>(StatusCodes.Status201Created)
-            .ProducesValidationProblem()
-            .RequireAuthorization("AdminPolicy")
-            .RequireRateLimiting("modify")
             .WithName("CreateTimeEntry")
             .WithSummary("Create a new time entry.")
-            .WithTags("TimeEntries")
             .WithDescription("Creates a new time entry with supplied values.")
             .WithOpenApi();
 
-        app.MapPut("/api/v1/time-entries/{id:long}", UpdateTimeEntry)
+        timeEntriesAdminGroup
+            .MapPut("/{id:long}", UpdateTimeEntry)
             .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
-            .Produces<TimeEntryModel>()
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status404NotFound)
-            .RequireAuthorization("AdminPolicy")
-            .RequireRateLimiting("modify")
             .WithName(nameof(UpdateTimeEntry))
             .WithSummary("Update a time entry by id.")
             .WithDescription("Updates a time entry with the given id, using the supplied data.")
-            .WithTags("TimeEntries")
             .WithOpenApi(operation =>
             {
                 operation.Parameters[0].Description = "Id of the time entry to update.";
@@ -97,7 +87,7 @@ public class TimeEntriesModule : ICarterModule
             });
     }
 
-    private static async Task<IResult> CreateTimeEntry(
+    private static async Task<Results<ValidationProblem, NotFound, Created<TimeEntryModel>>> CreateTimeEntry(
         TimeEntryInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger)
     {
         logger.LogDebug(
@@ -111,7 +101,7 @@ public class TimeEntriesModule : ICarterModule
 
         if (user == null || project == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         var timeEntry = new TimeEntry { User = user, Project = project, HourRate = user.HourRate };
@@ -122,10 +112,10 @@ public class TimeEntriesModule : ICarterModule
 
         var resultModel = TimeEntryModel.FromTimeEntry(timeEntry);
 
-        return Results.CreatedAtRoute(nameof(GetTimeEntry), new { id = timeEntry.Id }, resultModel);
+        return TypedResults.Created($"/api/v1/time-entries/{timeEntry.Id}", resultModel);
     }
 
-    private static async Task<IResult> DeleteTimeEntry(
+    private static async Task<Results<NotFound, Ok>> DeleteTimeEntry(
         long id, TimeTrackerDbContext dbContext, ILogger<Program> logger)
     {
         logger.LogDebug("Deleting time entries with id {Id}", id);
@@ -134,16 +124,16 @@ public class TimeEntriesModule : ICarterModule
 
         if (timeEntry == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         dbContext.TimeEntries.Remove(timeEntry);
         await dbContext.SaveChangesAsync();
 
-        return Results.Ok();
+        return TypedResults.Ok();
     }
 
-    private static async Task<PagedList<TimeEntryModel>> GetTimeEntries(
+    private static async Task<Ok<PagedList<TimeEntryModel>>> GetTimeEntries(
         TimeTrackerDbContext dbContext, ILogger<Program> logger, int page = 1, int size = 5)
     {
         logger.LogDebug("Getting a page {Page} of time entries with page size {Size}", page, size);
@@ -156,15 +146,15 @@ public class TimeEntriesModule : ICarterModule
             .Take(size)
             .ToListAsync();
 
-        return new PagedList<TimeEntryModel>
+        return TypedResults.Ok(new PagedList<TimeEntryModel>
         {
             Items = timeEntries.Select(TimeEntryModel.FromTimeEntry),
             Page = page,
             PageSize = size,
             TotalCount = await dbContext.TimeEntries!.CountAsync()
-        };
+        });
     }
-    private static async Task<TimeEntryModel[]> GetTimeEntriesByUserAndMonth(
+    private static async Task<Ok<TimeEntryModel[]>> GetTimeEntriesByUserAndMonth(
         TimeTrackerDbContext dbContext, ILogger<Program> logger, long userId, int year, int month)
     {
         logger.LogDebug(
@@ -181,12 +171,12 @@ public class TimeEntriesModule : ICarterModule
             .OrderBy(x => x.EntryDate)
             .ToListAsync();
 
-        return timeEntries
+        return TypedResults.Ok(timeEntries
             .Select(TimeEntryModel.FromTimeEntry)
-            .ToArray();
+            .ToArray());
     }
 
-    private static async Task<IResult> GetTimeEntry(ILogger<Program> logger, long id, TimeTrackerDbContext dbContext)
+    private static async Task<Results<NotFound, Ok<TimeEntryModel>>> GetTimeEntry(ILogger<Program> logger, long id, TimeTrackerDbContext dbContext)
     {
         logger.LogDebug("Getting a time entry with id {Id}", id);
 
@@ -197,11 +187,11 @@ public class TimeEntriesModule : ICarterModule
             .SingleOrDefaultAsync(x => x.Id == id);
 
         return timeEntry == null
-            ? Results.NotFound()
-            : Results.Ok(TimeEntryModel.FromTimeEntry(timeEntry));
+            ? TypedResults.NotFound()
+            : TypedResults.Ok(TimeEntryModel.FromTimeEntry(timeEntry));
     }
 
-    private static async Task<IResult> UpdateTimeEntry(
+    private static async Task<Results<ValidationProblem, NotFound, Ok<TimeEntryModel>>> UpdateTimeEntry(
         long id, TimeEntryInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger)
     {
         logger.LogDebug("Updating a time entry with id {Id}", id);
@@ -214,7 +204,7 @@ public class TimeEntriesModule : ICarterModule
 
         if (timeEntry == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         model.MapTo(timeEntry);
@@ -222,6 +212,6 @@ public class TimeEntriesModule : ICarterModule
         dbContext.TimeEntries!.Update(timeEntry);
         await dbContext.SaveChangesAsync();
 
-        return Results.Ok(TimeEntryModel.FromTimeEntry(timeEntry));
+        return TypedResults.Ok(TimeEntryModel.FromTimeEntry(timeEntry));
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Carter;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using MinimalApis.MinimalSample.Refactored.Data;
 using MinimalApis.MinimalSample.Refactored.Features.Common;
@@ -9,12 +10,16 @@ public class ClientsModule : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/v1/clients", GetClients)
-            .Produces<PagedList<ClientModel>>()
+        var clientsGroup = app.MapGroup("/api/v1/clients")
+            .WithTags("Clients");
+        var clientsAdminGroup = clientsGroup.MapGroup("/")
+            .RequireAuthorization("AdminPolicy");
+
+        clientsGroup
+            .MapGet("/", GetClients)
             .WithName(nameof(GetClients))
             .WithSummary("Get a paged list of clients.")
             .WithDescription("Gets one page of the available clients.")
-            .WithTags("Clients")
             .WithOpenApi(operation =>
             {
                 operation.Parameters[0].Description = "Page number.";
@@ -22,54 +27,42 @@ public class ClientsModule : ICarterModule
                 return operation;
             });
 
-        app.MapGet("/api/v1/clients/{id:long}", GetClient)
-            .Produces<ClientModel>()
-            .Produces(StatusCodes.Status404NotFound)
+        clientsGroup
+            .MapGet("/{id:long}", GetClient)
             .WithName(nameof(GetClient))
             .WithSummary("Get a client by id.")
             .WithDescription("Gets a single client by id value.")
-            .WithTags("Clients")
             .WithOpenApi(operation =>
             {
                 operation.Parameters[0].Description = "Id of the client to retrieve.";
                 return operation;
             });
 
-        app.MapDelete("/api/v1/clients/{id:long}", DeleteClient)
-            .Produces(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status404NotFound)
-            .RequireAuthorization("AdminPolicy")
+        clientsAdminGroup
+            .MapDelete("/{id:long}", DeleteClient)
             .WithName(nameof(DeleteClient))
             .WithSummary("Delete a client by id.")
             .WithDescription("Deletes a single client by id value.")
-            .WithTags("Clients")
             .WithOpenApi(operation =>
             {
                 operation.Parameters[0].Description = "Id of the client to delete.";
                 return operation;
             });
 
-        app.MapPost("/api/v1/clients", CreateClient)
+        clientsAdminGroup
+            .MapPost("/", CreateClient)
             .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
-            .Produces<ClientModel>(StatusCodes.Status201Created)
-            .ProducesValidationProblem()
-            .RequireAuthorization("AdminPolicy")
             .WithName(nameof(CreateClient))
             .WithSummary("Create a new client.")
-            .WithTags("Clients")
             .WithDescription("Creates a new client with supplied values.")
             .WithOpenApi();
 
-        app.MapPut("/api/v1/clients/{id:long}", UpdateClient)
+        clientsAdminGroup
+            .MapPut("/{id:long}", UpdateClient)
             .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
-            .Produces<ClientModel>()
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status404NotFound)
-            .RequireAuthorization("AdminPolicy")
             .WithName("UpdateClient")
             .WithSummary("Update a client by id.")
             .WithDescription("Updates a client with the given id, using the supplied data.")
-            .WithTags("Clients")
             .WithOpenApi(operation =>
             {
                 operation.Parameters[0].Description = "Id of the client to update.";
@@ -77,7 +70,7 @@ public class ClientsModule : ICarterModule
             });
     }
 
-    private static async Task<IResult> CreateClient(
+    private static async Task<Results<ValidationProblem, Created<ClientModel>>> CreateClient(
         ILogger<Program> logger, ClientInputModel model, TimeTrackerDbContext dbContext)
     {
         logger.LogDebug("Creating a new client with name {Name}", model.Name);
@@ -90,10 +83,11 @@ public class ClientsModule : ICarterModule
 
         var resultModel = ClientModel.FromClient(client);
 
-        return Results.CreatedAtRoute(nameof(GetClient), new { id = client.Id }, resultModel);
+        return TypedResults.Created($"/api/v1/clients/{client.Id}", resultModel);
     }
 
-    private static async Task<IResult> DeleteClient(ILogger<Program> logger, long id, TimeTrackerDbContext dbContext)
+    private static async Task<Results<NotFound, Ok>> DeleteClient(
+        ILogger<Program> logger, long id, TimeTrackerDbContext dbContext)
     {
         logger.LogDebug("Deleting a client with id {Id}", id);
 
@@ -101,16 +95,16 @@ public class ClientsModule : ICarterModule
 
         if (client == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         dbContext.Clients.Remove(client);
         await dbContext.SaveChangesAsync();
 
-        return Results.Ok();
+        return TypedResults.Ok();
     }
 
-    private static async Task<IResult> GetClient(
+    private static async Task<Results<NotFound, Ok<ClientModel>>> GetClient(
         long id, TimeTrackerDbContext dbContext, ILogger<Program> logger)
     {
         logger.LogDebug("Getting a client with id {Id}", id);
@@ -118,11 +112,11 @@ public class ClientsModule : ICarterModule
         var client = await dbContext.Clients!.FindAsync(id);
 
         return client == null
-            ? Results.NotFound()
-            : Results.Ok(ClientModel.FromClient(client));
+            ? TypedResults.NotFound()
+            : TypedResults.Ok(ClientModel.FromClient(client));
     }
 
-    private static async Task<PagedList<ClientModel>> GetClients(
+    private static async Task<Ok<PagedList<ClientModel>>> GetClients(
         TimeTrackerDbContext dbContext, ILogger<Program> logger, int page = 1, int size = 5)
     {
         logger.LogDebug("Getting a page {Page} of clients with page size {Size}", page, size);
@@ -132,16 +126,16 @@ public class ClientsModule : ICarterModule
             .Take(size)
             .ToListAsync();
 
-        return new PagedList<ClientModel>
+        return TypedResults.Ok(new PagedList<ClientModel>
         {
             Items = clients.Select(ClientModel.FromClient),
             Page = page,
             PageSize = size,
             TotalCount = await dbContext.Clients!.CountAsync()
-        };
+        });
     }
 
-    private static async Task<IResult> UpdateClient(
+    private static async Task<Results<ValidationProblem, NotFound, Ok<ClientModel>>> UpdateClient(
         long id, ClientInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger)
     {
         logger.LogDebug("Updating a client with id {Id}", id);
@@ -150,7 +144,7 @@ public class ClientsModule : ICarterModule
 
         if (client == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         model.MapTo(client);
@@ -158,6 +152,6 @@ public class ClientsModule : ICarterModule
         dbContext.Clients.Update(client);
         await dbContext.SaveChangesAsync();
 
-        return Results.Ok(ClientModel.FromClient(client));
+        return TypedResults.Ok(ClientModel.FromClient(client));
     }
 }

@@ -4,6 +4,7 @@ This is a sample code for the presentation "Minimal APIs in ASP.NET Core 6+".
 
 ## Presentations
 
+- [November 2022, Advanced Technology Days, Zagreb](2022-11-atd-minimal-apis.pptx)
 - [September 2022, Road to Init, Banja Luka](2022-09-road-to-init-minimal-apis.pptx)
 - [September 2022, KulenDayz, Osijek](2022-09-kulendayz-minimal-apis.pptx)
 

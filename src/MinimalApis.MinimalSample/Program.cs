@@ -63,12 +63,17 @@ async Task<PagedList<ClientModel>> GetClients(
     };
 }
 
-app.MapGet("/api/v1/clients", GetClients)
+var clientsGroup = app.MapGroup("/api/v1/clients")
+    .WithTags("Clients");
+var clientsAdminGroup = clientsGroup.MapGroup("/")
+    .RequireAuthorization("AdminPolicy");
+
+clientsGroup
+    .MapGet("/", GetClients)
     .Produces<PagedList<ClientModel>>()
     .WithName("GetClients")
     .WithSummary("Get a paged list of clients.")
     .WithDescription("Gets one page of the available clients.")
-    .WithTags("Clients")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Page number.";
@@ -76,7 +81,8 @@ app.MapGet("/api/v1/clients", GetClients)
         return operation;
     });
 
-app.MapGet("/api/v1/clients/{id:long}",
+clientsGroup
+    .MapGet("/{id:long}",
     async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Getting a client with id {Id}", id);
@@ -92,14 +98,14 @@ app.MapGet("/api/v1/clients/{id:long}",
     .WithName("GetClient")
     .WithSummary("Get a client by id.")
     .WithDescription("Gets a single client by id value.")
-    .WithTags("Clients")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the client to retrieve.";
         return operation;
     });
 
-app.MapDelete("/api/v1/clients/{id:long}",
+clientsAdminGroup
+    .MapDelete("/{id:long}",
     async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Deleting a client with id {Id}", id);
@@ -118,18 +124,17 @@ app.MapDelete("/api/v1/clients/{id:long}",
     })
     .Produces(StatusCodes.Status200OK)
     .Produces(StatusCodes.Status404NotFound)
-    .RequireAuthorization("AdminPolicy")
     .WithName("DeleteClient")
     .WithSummary("Delete a client by id.")
     .WithDescription("Deletes a single client by id value.")
-    .WithTags("Clients")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the client to delete.";
         return operation;
     });
 
-app.MapPost("/api/v1/clients",
+clientsAdminGroup
+    .MapPost("/",
     async (ClientInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Creating a new client with name {Name}", model.Name);
@@ -147,14 +152,13 @@ app.MapPost("/api/v1/clients",
     .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
     .Produces<ClientModel>(StatusCodes.Status201Created)
     .ProducesValidationProblem()
-    .RequireAuthorization("AdminPolicy")
     .WithName("CreateClient")
     .WithSummary("Create a new client.")
-    .WithTags("Clients")
     .WithDescription("Creates a new client with supplied values.")
     .WithOpenApi();
 
-app.MapPut("/api/v1/clients/{id:long}",
+clientsAdminGroup
+    .MapPut("/{id:long}",
     async (long id, ClientInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Updating a client with id {Id}", id);
@@ -177,16 +181,19 @@ app.MapPut("/api/v1/clients/{id:long}",
     .Produces<ClientModel>()
     .ProducesValidationProblem()
     .Produces(StatusCodes.Status404NotFound)
-    .RequireAuthorization("AdminPolicy")
     .WithName("UpdateClient")
     .WithSummary("Update a client by id.")
     .WithDescription("Updates a client with the given id, using the supplied data.")
-    .WithTags("Clients")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the client to update.";
         return operation;
     });
+
+var projectsGroup = app.MapGroup("/api/v1/projects")
+    .WithTags("Projects");
+var projectsAdminGroup = projectsGroup.MapGroup("/")
+    .RequireAuthorization("AdminPolicy");
 
 async Task<PagedList<ProjectModel>> GetProjects(
     TimeTrackerDbContext dbContext, ILogger<Program> logger, int page = 1, int size = 5)
@@ -208,12 +215,12 @@ async Task<PagedList<ProjectModel>> GetProjects(
     };
 }
 
-app.MapGet("/api/v1/projects", GetProjects)
+projectsGroup
+    .MapGet("/", GetProjects)
     .Produces<PagedList<ProjectModel>>()
     .WithName("GetProjects")
     .WithSummary("Get a paged list of projects.")
     .WithDescription("Gets one page of the available projects.")
-    .WithTags("Projects")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Page number.";
@@ -221,7 +228,8 @@ app.MapGet("/api/v1/projects", GetProjects)
         return operation;
     });
 
-app.MapGet("/api/v1/projects/{id:long}",
+projectsGroup
+    .MapGet("/{id:long}",
     async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Getting a project with id {Id}", id);
@@ -239,14 +247,14 @@ app.MapGet("/api/v1/projects/{id:long}",
     .WithName("GetProject")
     .WithSummary("Get a project by id.")
     .WithDescription("Gets a single project by id value.")
-    .WithTags("Projects")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the project to retrieve.";
         return operation;
     });
 
-app.MapDelete("/api/v1/projects/{id:long}",
+projectsAdminGroup
+    .MapDelete("/{id:long}",
     async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Deleting a project with id {Id}", id);
@@ -265,18 +273,17 @@ app.MapDelete("/api/v1/projects/{id:long}",
     })
     .Produces(StatusCodes.Status200OK)
     .Produces(StatusCodes.Status404NotFound)
-    .RequireAuthorization("AdminPolicy")
     .WithName("DeleteProject")
     .WithSummary("Delete a project by id.")
     .WithDescription("Deletes a single project by id value.")
-    .WithTags("Projects")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the project to delete.";
         return operation;
     });
 
-app.MapPost("/api/v1/projects",
+projectsAdminGroup
+    .MapPost("/",
     async (ProjectInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Creating a new project with name {Name}", model.Name);
@@ -300,14 +307,13 @@ app.MapPost("/api/v1/projects",
     .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
     .Produces<ProjectModel>(StatusCodes.Status201Created)
     .ProducesValidationProblem()
-    .RequireAuthorization("AdminPolicy")
     .WithName("CreateProject")
     .WithSummary("Create a new project.")
-    .WithTags("Projects")
     .WithDescription("Creates a new project with supplied values.")
     .WithOpenApi();
 
-app.MapPut("/api/v1/projects/{id:long}",
+projectsAdminGroup
+    .MapPut("/{id:long}",
     async (long id, ProjectInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Updating a project with id {Id}", id);
@@ -332,16 +338,19 @@ app.MapPut("/api/v1/projects/{id:long}",
     .Produces<ProjectModel>()
     .ProducesValidationProblem()
     .Produces(StatusCodes.Status404NotFound)
-    .RequireAuthorization("AdminPolicy")
     .WithName("UpdateProject")
     .WithSummary("Update a project by id.")
     .WithDescription("Updates a project with the given id, using the supplied data.")
-    .WithTags("Projects")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the project to update.";
         return operation;
     });
+
+var timeEntriesGroup = app.MapGroup("/api/v1/time-entries")
+    .WithTags("TimeEntries");
+var timeEntriesAdminGroup = timeEntriesGroup.MapGroup("/")
+    .RequireAuthorization("AdminPolicy");
 
 async Task<PagedList<TimeEntryModel>> GetTimeEntries(
     TimeTrackerDbContext dbContext, ILogger<Program> logger, int page = 1, int size = 5)
@@ -387,13 +396,13 @@ async Task<TimeEntryModel[]> GetTimeEntriesByUserAndMonth(
         .ToArray();
 }
 
-app.MapGet("/api/v1/time-entries", GetTimeEntries)
+timeEntriesGroup
+    .MapGet("/", GetTimeEntries)
     .Produces<PagedList<TimeEntryModel>>()
     .RequireRateLimiting("get")
     .WithName("GetTimeEntries")
     .WithSummary("Get a paged list of time entries.")
     .WithDescription("Gets one page of the available time entries.")
-    .WithTags("TimeEntries")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Page number.";
@@ -401,13 +410,13 @@ app.MapGet("/api/v1/time-entries", GetTimeEntries)
         return operation;
     });
 
-app.MapGet("/api/v1/time-entries/{userId:long}/{year:int}/{month:int}", GetTimeEntriesByUserAndMonth)
+timeEntriesGroup
+    .MapGet("/{userId:long}/{year:int}/{month:int}", GetTimeEntriesByUserAndMonth)
     .Produces<TimeEntryModel[]>()
     .RequireRateLimiting("get")
     .WithName("GetTimeEntriesByUserAndMonth")
     .WithSummary("Get a list of time entries for user and month.")
     .WithDescription("Gets a list of time entries for a specified user and month.")
-    .WithTags("TimeEntries")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Page number.";
@@ -415,7 +424,8 @@ app.MapGet("/api/v1/time-entries/{userId:long}/{year:int}/{month:int}", GetTimeE
         return operation;
     });
 
-app.MapGet("/api/v1/time-entries/{id:long}",
+timeEntriesGroup
+    .MapGet("/{id:long}",
     async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Getting a time entry with id {Id}", id);
@@ -436,14 +446,14 @@ app.MapGet("/api/v1/time-entries/{id:long}",
     .WithName("GetTimeEntry")
     .WithSummary("Get a time entry by id.")
     .WithDescription("Gets a single time entry by id value.")
-    .WithTags("TimeEntries")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the time entry to retrieve.";
         return operation;
     });
 
-app.MapDelete("/api/v1/time-entries/{id:long}",
+timeEntriesAdminGroup
+    .MapDelete("/{id:long}",
     async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Deleting time entries with id {Id}", id);
@@ -462,19 +472,18 @@ app.MapDelete("/api/v1/time-entries/{id:long}",
     })
     .Produces(StatusCodes.Status200OK)
     .Produces(StatusCodes.Status404NotFound)
-    .RequireAuthorization("AdminPolicy")
     .RequireRateLimiting("modify")
     .WithName("DeleteTimeEntry")
     .WithSummary("Delete a time entry by id.")
     .WithDescription("Deletes a single time entry by id value.")
-    .WithTags("TimeEntries")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the time entry to delete.";
         return operation;
     });
 
-app.MapPost("/api/v1/time-entries",
+timeEntriesAdminGroup
+    .MapPost("/",
     async (TimeEntryInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug(
@@ -504,15 +513,14 @@ app.MapPost("/api/v1/time-entries",
     .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
     .Produces<TimeEntryModel>(StatusCodes.Status201Created)
     .ProducesValidationProblem()
-    .RequireAuthorization("AdminPolicy")
     .RequireRateLimiting("modify")
     .WithName("CreateTimeEntry")
     .WithSummary("Create a new time entry.")
-    .WithTags("TimeEntries")
     .WithDescription("Creates a new time entry with supplied values.")
     .WithOpenApi();
 
-app.MapPut("/api/v1/time-entries/{id:long}",
+timeEntriesAdminGroup
+    .MapPut("/{id:long}",
     async (long id, TimeEntryInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Updating a time entry with id {Id}", id);
@@ -539,17 +547,20 @@ app.MapPut("/api/v1/time-entries/{id:long}",
     .Produces<TimeEntryModel>()
     .ProducesValidationProblem()
     .Produces(StatusCodes.Status404NotFound)
-    .RequireAuthorization("AdminPolicy")
     .RequireRateLimiting("modify")
     .WithName("UpdateTimeEntry")
     .WithSummary("Update a time entry by id.")
     .WithDescription("Updates a time entry with the given id, using the supplied data.")
-    .WithTags("TimeEntries")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the time entry to update.";
         return operation;
     });
+
+var usersGroup = app.MapGroup("/api/v1/users")
+    .WithTags("Users");
+var usersAdminGroup = usersGroup.MapGroup("/")
+    .RequireAuthorization("AdminPolicy");
 
 async Task<PagedList<UserModel>> GetUsers(
     TimeTrackerDbContext dbContext, ILogger<Program> logger, int page = 1, int size = 5)
@@ -570,12 +581,12 @@ async Task<PagedList<UserModel>> GetUsers(
     };
 }
 
-app.MapGet("/api/v1/users", GetUsers)
+usersGroup
+    .MapGet("/", GetUsers)
     .Produces<PagedList<UserModel>>()
     .WithName("GetUsers")
     .WithSummary("Get a paged list of users.")
     .WithDescription("Gets one page of the available users.")
-    .WithTags("Users")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Page number.";
@@ -583,7 +594,8 @@ app.MapGet("/api/v1/users", GetUsers)
         return operation;
     });
 
-app.MapGet("/api/v1/users/{id:long}",
+usersGroup
+    .MapGet("/{id:long}",
     async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Getting a user with id {Id}", id);
@@ -599,14 +611,14 @@ app.MapGet("/api/v1/users/{id:long}",
     .WithName("GetUser")
     .WithSummary("Get a user by id.")
     .WithDescription("Gets a single user by id value.")
-    .WithTags("Users")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the user to retrieve.";
         return operation;
     });
 
-app.MapDelete("/api/v1/users/{id:long}",
+usersAdminGroup
+    .MapDelete("/{id:long}",
     async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Deleting a user with id {Id}", id);
@@ -625,18 +637,17 @@ app.MapDelete("/api/v1/users/{id:long}",
     })
     .Produces(StatusCodes.Status200OK)
     .Produces(StatusCodes.Status404NotFound)
-    .RequireAuthorization("AdminPolicy")
     .WithName("DeleteUser")
     .WithSummary("Delete a user by id.")
     .WithDescription("Deletes a single user by id value.")
-    .WithTags("Users")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the user to delete.";
         return operation;
     });
 
-app.MapPost("/api/v1/users",
+usersAdminGroup
+    .MapPost("/",
     async (UserInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Creating a new user with name {Name}", model.Name);
@@ -654,14 +665,13 @@ app.MapPost("/api/v1/users",
     .AddEndpointFilter<ValidationFilter<UserInputModel>>()
     .Produces<UserModel>(StatusCodes.Status201Created)
     .ProducesValidationProblem()
-    .RequireAuthorization("AdminPolicy")
     .WithName("CreateUser")
     .WithSummary("Create a new user.")
-    .WithTags("Users")
     .WithDescription("Creates a new user with supplied values.")
     .WithOpenApi();
 
-app.MapPut("/api/v1/users/{id:long}",
+usersAdminGroup
+    .MapPut("/{id:long}",
     async (long id, UserInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Updating a user with id {Id}", id);
@@ -684,11 +694,9 @@ app.MapPut("/api/v1/users/{id:long}",
     .Produces<UserModel>()
     .ProducesValidationProblem()
     .Produces(StatusCodes.Status404NotFound)
-    .RequireAuthorization("AdminPolicy")
     .WithName("UpdateUser")
     .WithSummary("Update a user by id.")
     .WithDescription("Updates a user with the given id, using the supplied data.")
-    .WithTags("Users")
     .WithOpenApi(operation =>
     {
         operation.Parameters[0].Description = "Id of the user to update.";

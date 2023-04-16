@@ -1,6 +1,6 @@
 ﻿# ASP.NET Core Minimal APIs sample
 
-This is a sample code for the presentation "Minimal APIs in ASP.NET Core 6+".
+This is a sample code for the presentation "Minimal APIs in ASP.NET Core".
 
 ## Presentations
 
@@ -20,7 +20,7 @@ The test project is demonstrating how to write integration tests that target Min
 
 ## Requirements
 
-The projects are created using .NET 6 and .NET 7 Preview 7. You need to have [.NET 7 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) installed locally.
+The projects are created using .NET 6 (only the MvcSample project) and .NET 8. You need to have [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) installed locally.
 
 Before running the samples, you need to make sure that the SQLite database are created and pre-seeded with the data. To ensure that, run the following commands:
 

@@ -1,16 +1,35 @@
 ﻿using System.Reflection;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
+using Asp.Versioning;
 using FakeAuth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Microsoft.OpenApi.Models;
+using MinimalApis.MinimalSample.Extensions;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace MinimalApis.MinimalSample.Refactored.Extensions;
 
 public static class ServiceCollectionExtensions
 {
+    public static void AddApiVersioning(this IServiceCollection services, ApiVersion defaultVersion) =>
+        services
+            .AddApiVersioning(options =>
+            {
+                options.DefaultApiVersion = defaultVersion;
+                options.ApiVersionReader = new UrlSegmentApiVersionReader();
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.ReportApiVersions = true;
+            })
+            .AddApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'V";
+                options.SubstituteApiVersionInUrl = true;
+            });
+
     public static void AddDemoAuthentication(this IServiceCollection services) =>
         services
             .AddAuthentication("FakeAuth")
@@ -73,27 +92,6 @@ public static class ServiceCollectionExtensions
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services
             .AddEndpointsApiExplorer()
-            .AddSwaggerGen(options =>
-            {
-                options.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Version = "v1",
-                    Title = "MinimalApis MinimalSample.Refactored",
-                    Description = "An ASP.NET Core Minimal APIs refactored sample",
-                    Contact = new OpenApiContact
-                    {
-                        Name = "Miroslav Popovic",
-                        Url = new Uri("https://miroslavpopovic.com/")
-                    },
-                    License = new OpenApiLicense
-                    {
-                        Name = "Sample license",
-                        Url = new Uri("https://github.com/miroslavpopovic/minimal-apis-sample/blob/main/LICENSE")
-                    }
-                });
-
-                options.DescribeAllParametersInCamelCase();
-                var xmlFileName = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFileName));
-            });
+            .AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>()
+            .AddSwaggerGen(options => options.OperationFilter<SwaggerDefaultValues>());
 }

@@ -1,4 +1,5 @@
-﻿using Carter;
+﻿using Asp.Versioning.Builder;
+using Carter;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using MinimalApis.MinimalSample.Refactored.Data;
@@ -8,9 +9,17 @@ namespace MinimalApis.MinimalSample.Refactored.Features.TimeEntries;
 
 public class TimeEntriesModule : ICarterModule
 {
+    private readonly Lazy<ApiVersionSet> _apiVersionSet;
+
+    public TimeEntriesModule(Lazy<ApiVersionSet> apiVersionSet)
+    {
+        _apiVersionSet = apiVersionSet;
+    }
+
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        var timeEntriesGroup = app.MapGroup("/api/v1/time-entries")
+        var timeEntriesGroup = app.MapGroup("/api/v{version:apiVersion}/time-entries")
+            .WithApiVersionSet(_apiVersionSet.Value)
             .WithTags("TimeEntries");
         var timeEntriesAdminGroup = timeEntriesGroup.MapGroup("/")
             .RequireAuthorization("AdminPolicy")

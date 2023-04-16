@@ -1,4 +1,5 @@
-﻿using Carter;
+﻿using Asp.Versioning.Builder;
+using Carter;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using MinimalApis.MinimalSample.Refactored.Data;
@@ -8,9 +9,17 @@ namespace MinimalApis.MinimalSample.Refactored.Features.Projects;
 
 public class ProjectsModule : ICarterModule
 {
+    private readonly Lazy<ApiVersionSet> _apiVersionSet;
+
+    public ProjectsModule(Lazy<ApiVersionSet> apiVersionSet)
+    {
+        _apiVersionSet = apiVersionSet;
+    }
+
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        var projectsGroup = app.MapGroup("/api/v1/projects")
+        var projectsGroup = app.MapGroup("/api/v{version:apiVersion}/projects")
+            .WithApiVersionSet(_apiVersionSet.Value)
             .WithTags("Projects");
         var projectsAdminGroup = projectsGroup.MapGroup("/")
             .RequireAuthorization("AdminPolicy");

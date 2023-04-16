@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using MinimalApis.MinimalSample;
 using MinimalApis.MinimalSample.Data;
@@ -70,7 +71,6 @@ var clientsAdminGroup = clientsGroup.MapGroup("/")
 
 clientsGroup
     .MapGet("/", GetClients)
-    .Produces<PagedList<ClientModel>>()
     .WithName("GetClients")
     .WithSummary("Get a paged list of clients.")
     .WithDescription("Gets one page of the available clients.")
@@ -82,19 +82,17 @@ clientsGroup
     });
 
 clientsGroup
-    .MapGet("/{id:long}",
-    async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapGet("/{id:long}", async Task<Results<NotFound, Ok<ClientModel>>> (
+        long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Getting a client with id {Id}", id);
 
         var client = await dbContext.Clients!.FindAsync(id);
 
         return client == null
-            ? Results.NotFound()
-            : Results.Ok(ClientModel.FromClient(client));
+            ? TypedResults.NotFound()
+            : TypedResults.Ok(ClientModel.FromClient(client));
     })
-    .Produces<ClientModel>()
-    .Produces(StatusCodes.Status404NotFound)
     .WithName("GetClient")
     .WithSummary("Get a client by id.")
     .WithDescription("Gets a single client by id value.")
@@ -106,7 +104,7 @@ clientsGroup
 
 clientsAdminGroup
     .MapDelete("/{id:long}",
-    async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    async Task<Results<NotFound, Ok>> (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Deleting a client with id {Id}", id);
 
@@ -114,16 +112,14 @@ clientsAdminGroup
 
         if (client == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         dbContext.Clients.Remove(client);
         await dbContext.SaveChangesAsync();
 
-        return Results.Ok();
+        return TypedResults.Ok();
     })
-    .Produces(StatusCodes.Status200OK)
-    .Produces(StatusCodes.Status404NotFound)
     .WithName("DeleteClient")
     .WithSummary("Delete a client by id.")
     .WithDescription("Deletes a single client by id value.")
@@ -134,8 +130,8 @@ clientsAdminGroup
     });
 
 clientsAdminGroup
-    .MapPost("/",
-    async (ClientInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapPost("/", async Task<Results<ValidationProblem, CreatedAtRoute<ClientModel>>> (
+        ClientInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Creating a new client with name {Name}", model.Name);
 
@@ -147,19 +143,17 @@ clientsAdminGroup
 
         var resultModel = ClientModel.FromClient(client);
 
-        return Results.CreatedAtRoute("GetClient", new {id = client.Id}, resultModel);
+        return TypedResults.CreatedAtRoute(resultModel, "GetClient", new { id = client.Id });
     })
     .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
-    .Produces<ClientModel>(StatusCodes.Status201Created)
-    .ProducesValidationProblem()
     .WithName("CreateClient")
     .WithSummary("Create a new client.")
     .WithDescription("Creates a new client with supplied values.")
     .WithOpenApi();
 
 clientsAdminGroup
-    .MapPut("/{id:long}",
-    async (long id, ClientInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapPut("/{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<ClientModel>>> (
+        long id, ClientInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Updating a client with id {Id}", id);
 
@@ -167,7 +161,7 @@ clientsAdminGroup
 
         if (client == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         model.MapTo(client);
@@ -175,12 +169,9 @@ clientsAdminGroup
         dbContext.Clients.Update(client);
         await dbContext.SaveChangesAsync();
 
-        return Results.Ok(ClientModel.FromClient(client));
+        return TypedResults.Ok(ClientModel.FromClient(client));
     })
     .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
-    .Produces<ClientModel>()
-    .ProducesValidationProblem()
-    .Produces(StatusCodes.Status404NotFound)
     .WithName("UpdateClient")
     .WithSummary("Update a client by id.")
     .WithDescription("Updates a client with the given id, using the supplied data.")
@@ -217,7 +208,6 @@ async Task<PagedList<ProjectModel>> GetProjects(
 
 projectsGroup
     .MapGet("/", GetProjects)
-    .Produces<PagedList<ProjectModel>>()
     .WithName("GetProjects")
     .WithSummary("Get a paged list of projects.")
     .WithDescription("Gets one page of the available projects.")
@@ -229,8 +219,8 @@ projectsGroup
     });
 
 projectsGroup
-    .MapGet("/{id:long}",
-    async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapGet("/{id:long}", async Task<Results<NotFound, Ok<ProjectModel>>> (
+    long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Getting a project with id {Id}", id);
 
@@ -239,11 +229,9 @@ projectsGroup
             .SingleOrDefaultAsync(x => x.Id == id);
 
         return project == null
-            ? Results.NotFound()
-            : Results.Ok(ProjectModel.FromProject(project));
+            ? TypedResults.NotFound()
+            : TypedResults.Ok(ProjectModel.FromProject(project));
     })
-    .Produces<ProjectModel>()
-    .Produces(StatusCodes.Status404NotFound)
     .WithName("GetProject")
     .WithSummary("Get a project by id.")
     .WithDescription("Gets a single project by id value.")
@@ -254,8 +242,8 @@ projectsGroup
     });
 
 projectsAdminGroup
-    .MapDelete("/{id:long}",
-    async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapDelete("/{id:long}", async Task<Results<NotFound, Ok>> (
+        long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Deleting a project with id {Id}", id);
 
@@ -263,16 +251,14 @@ projectsAdminGroup
 
         if (project == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         dbContext.Projects.Remove(project);
         await dbContext.SaveChangesAsync();
 
-        return Results.Ok();
+        return TypedResults.Ok();
     })
-    .Produces(StatusCodes.Status200OK)
-    .Produces(StatusCodes.Status404NotFound)
     .WithName("DeleteProject")
     .WithSummary("Delete a project by id.")
     .WithDescription("Deletes a single project by id value.")
@@ -284,14 +270,15 @@ projectsAdminGroup
 
 projectsAdminGroup
     .MapPost("/",
-    async (ProjectInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    async Task<Results<ValidationProblem, NotFound, CreatedAtRoute<ProjectModel>>> (
+        ProjectInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Creating a new project with name {Name}", model.Name);
 
         var client = await dbContext.Clients!.FindAsync(model.ClientId);
         if (client == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         var project = new Project{Client = client};
@@ -302,19 +289,17 @@ projectsAdminGroup
 
         var resultModel = ProjectModel.FromProject(project);
 
-        return Results.CreatedAtRoute("GetProject", new {id = project.Id}, resultModel);
+        return TypedResults.CreatedAtRoute(resultModel, "GetProject", new {id = project.Id});
     })
     .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
-    .Produces<ProjectModel>(StatusCodes.Status201Created)
-    .ProducesValidationProblem()
     .WithName("CreateProject")
     .WithSummary("Create a new project.")
     .WithDescription("Creates a new project with supplied values.")
     .WithOpenApi();
 
 projectsAdminGroup
-    .MapPut("/{id:long}",
-    async (long id, ProjectInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapPut("/{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<ProjectModel>>> (
+        long id, ProjectInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Updating a project with id {Id}", id);
 
@@ -323,7 +308,7 @@ projectsAdminGroup
 
         if (project == null || client == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         project.Client = client;
@@ -332,12 +317,9 @@ projectsAdminGroup
         dbContext.Projects.Update(project);
         await dbContext.SaveChangesAsync();
 
-        return Results.Ok(ProjectModel.FromProject(project));
+        return TypedResults.Ok(ProjectModel.FromProject(project));
     })
     .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
-    .Produces<ProjectModel>()
-    .ProducesValidationProblem()
-    .Produces(StatusCodes.Status404NotFound)
     .WithName("UpdateProject")
     .WithSummary("Update a project by id.")
     .WithDescription("Updates a project with the given id, using the supplied data.")
@@ -398,7 +380,6 @@ async Task<TimeEntryModel[]> GetTimeEntriesByUserAndMonth(
 
 timeEntriesGroup
     .MapGet("/", GetTimeEntries)
-    .Produces<PagedList<TimeEntryModel>>()
     .RequireRateLimiting("get")
     .WithName("GetTimeEntries")
     .WithSummary("Get a paged list of time entries.")
@@ -412,7 +393,6 @@ timeEntriesGroup
 
 timeEntriesGroup
     .MapGet("/{userId:long}/{year:int}/{month:int}", GetTimeEntriesByUserAndMonth)
-    .Produces<TimeEntryModel[]>()
     .RequireRateLimiting("get")
     .WithName("GetTimeEntriesByUserAndMonth")
     .WithSummary("Get a list of time entries for user and month.")
@@ -425,8 +405,8 @@ timeEntriesGroup
     });
 
 timeEntriesGroup
-    .MapGet("/{id:long}",
-    async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapGet("/{id:long}", async Task<Results<NotFound, Ok<TimeEntryModel>>> (
+        long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Getting a time entry with id {Id}", id);
 
@@ -437,11 +417,9 @@ timeEntriesGroup
             .SingleOrDefaultAsync(x => x.Id == id);
 
         return timeEntry == null
-            ? Results.NotFound()
-            : Results.Ok(TimeEntryModel.FromTimeEntry(timeEntry));
+            ? TypedResults.NotFound()
+            : TypedResults.Ok(TimeEntryModel.FromTimeEntry(timeEntry));
     })
-    .Produces<TimeEntryModel>()
-    .Produces(StatusCodes.Status404NotFound)
     .RequireRateLimiting("get")
     .WithName("GetTimeEntry")
     .WithSummary("Get a time entry by id.")
@@ -453,8 +431,8 @@ timeEntriesGroup
     });
 
 timeEntriesAdminGroup
-    .MapDelete("/{id:long}",
-    async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapDelete("/{id:long}", async Task<Results<NotFound, Ok>> (
+        long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Deleting time entries with id {Id}", id);
 
@@ -462,16 +440,14 @@ timeEntriesAdminGroup
 
         if (timeEntry == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         dbContext.TimeEntries.Remove(timeEntry);
         await dbContext.SaveChangesAsync();
 
-        return Results.Ok();
+        return TypedResults.Ok();
     })
-    .Produces(StatusCodes.Status200OK)
-    .Produces(StatusCodes.Status404NotFound)
     .RequireRateLimiting("modify")
     .WithName("DeleteTimeEntry")
     .WithSummary("Delete a time entry by id.")
@@ -483,8 +459,8 @@ timeEntriesAdminGroup
     });
 
 timeEntriesAdminGroup
-    .MapPost("/",
-    async (TimeEntryInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapPost("/", async Task<Results<ValidationProblem, NotFound, CreatedAtRoute<TimeEntryModel>>> (
+        TimeEntryInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug(
             "Creating a new time entry for user {UserId}, project {ProjectId} and date {EntryDate}",
@@ -497,7 +473,7 @@ timeEntriesAdminGroup
 
         if (user == null || project == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         var timeEntry = new TimeEntry {User = user, Project = project, HourRate = user.HourRate};
@@ -508,11 +484,9 @@ timeEntriesAdminGroup
 
         var resultModel = TimeEntryModel.FromTimeEntry(timeEntry);
 
-        return Results.CreatedAtRoute("GetTimeEntry", new { id = timeEntry.Id }, resultModel);
+        return TypedResults.CreatedAtRoute(resultModel, "GetTimeEntry", new { id = timeEntry.Id });
     })
     .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
-    .Produces<TimeEntryModel>(StatusCodes.Status201Created)
-    .ProducesValidationProblem()
     .RequireRateLimiting("modify")
     .WithName("CreateTimeEntry")
     .WithSummary("Create a new time entry.")
@@ -520,8 +494,8 @@ timeEntriesAdminGroup
     .WithOpenApi();
 
 timeEntriesAdminGroup
-    .MapPut("/{id:long}",
-    async (long id, TimeEntryInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapPut("/{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<TimeEntryModel>>> (
+        long id, TimeEntryInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Updating a time entry with id {Id}", id);
 
@@ -533,7 +507,7 @@ timeEntriesAdminGroup
 
         if (timeEntry == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         model.MapTo(timeEntry);
@@ -541,12 +515,9 @@ timeEntriesAdminGroup
         dbContext.TimeEntries!.Update(timeEntry);
         await dbContext.SaveChangesAsync();
 
-        return Results.Ok(TimeEntryModel.FromTimeEntry(timeEntry));
+        return TypedResults.Ok(TimeEntryModel.FromTimeEntry(timeEntry));
     })
     .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
-    .Produces<TimeEntryModel>()
-    .ProducesValidationProblem()
-    .Produces(StatusCodes.Status404NotFound)
     .RequireRateLimiting("modify")
     .WithName("UpdateTimeEntry")
     .WithSummary("Update a time entry by id.")
@@ -583,7 +554,6 @@ async Task<PagedList<UserModel>> GetUsers(
 
 usersGroup
     .MapGet("/", GetUsers)
-    .Produces<PagedList<UserModel>>()
     .WithName("GetUsers")
     .WithSummary("Get a paged list of users.")
     .WithDescription("Gets one page of the available users.")
@@ -595,19 +565,17 @@ usersGroup
     });
 
 usersGroup
-    .MapGet("/{id:long}",
-    async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapGet("/{id:long}", async Task<Results<NotFound, Ok<UserModel>>> (
+        long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Getting a user with id {Id}", id);
 
         var user = await dbContext.Users!.FindAsync(id);
 
         return user == null
-            ? Results.NotFound()
-            : Results.Ok(UserModel.FromUser(user));
+            ? TypedResults.NotFound()
+            : TypedResults.Ok(UserModel.FromUser(user));
     })
-    .Produces<UserModel>()
-    .Produces(StatusCodes.Status404NotFound)
     .WithName("GetUser")
     .WithSummary("Get a user by id.")
     .WithDescription("Gets a single user by id value.")
@@ -618,8 +586,8 @@ usersGroup
     });
 
 usersAdminGroup
-    .MapDelete("/{id:long}",
-    async (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapDelete("/{id:long}", async Task<Results<NotFound, Ok>> (
+        long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Deleting a user with id {Id}", id);
 
@@ -627,16 +595,14 @@ usersAdminGroup
 
         if (user == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         dbContext.Users.Remove(user);
         await dbContext.SaveChangesAsync();
 
-        return Results.Ok();
+        return TypedResults.Ok();
     })
-    .Produces(StatusCodes.Status200OK)
-    .Produces(StatusCodes.Status404NotFound)
     .WithName("DeleteUser")
     .WithSummary("Delete a user by id.")
     .WithDescription("Deletes a single user by id value.")
@@ -647,8 +613,8 @@ usersAdminGroup
     });
 
 usersAdminGroup
-    .MapPost("/",
-    async (UserInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapPost("/", async Task<Results<ValidationProblem, CreatedAtRoute<UserModel>>> (
+        UserInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Creating a new user with name {Name}", model.Name);
 
@@ -660,19 +626,17 @@ usersAdminGroup
 
         var resultModel = UserModel.FromUser(user);
 
-        return Results.CreatedAtRoute("GetUsers", new { id = user.Id }, resultModel);
+        return TypedResults.CreatedAtRoute(resultModel, "GetUsers", new { id = user.Id });
     })
     .AddEndpointFilter<ValidationFilter<UserInputModel>>()
-    .Produces<UserModel>(StatusCodes.Status201Created)
-    .ProducesValidationProblem()
     .WithName("CreateUser")
     .WithSummary("Create a new user.")
     .WithDescription("Creates a new user with supplied values.")
     .WithOpenApi();
 
 usersAdminGroup
-    .MapPut("/{id:long}",
-    async (long id, UserInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
+    .MapPut("/{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<UserModel>>> (
+        long id, UserInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Updating a user with id {Id}", id);
 
@@ -680,7 +644,7 @@ usersAdminGroup
 
         if (user == null)
         {
-            return Results.NotFound();
+            return TypedResults.NotFound();
         }
 
         model.MapTo(user);
@@ -688,12 +652,9 @@ usersAdminGroup
         dbContext.Users.Update(user);
         await dbContext.SaveChangesAsync();
 
-        return Results.Ok(UserModel.FromUser(user));
+        return TypedResults.Ok(UserModel.FromUser(user));
     })
     .AddEndpointFilter<ValidationFilter<UserInputModel>>()
-    .Produces<UserModel>()
-    .ProducesValidationProblem()
-    .Produces(StatusCodes.Status404NotFound)
     .WithName("UpdateUser")
     .WithSummary("Update a user by id.")
     .WithDescription("Updates a user with the given id, using the supplied data.")

@@ -2,6 +2,8 @@
 
 This is a sample code for the presentation "Minimal APIs in ASP.NET Core".
 
+To learn what is new in ASP.NET Core Minimal APIs, you can check [What's new in .NET world?](https://github.com/miroslavpopovic/what-is-new-in-dotnet) GitHub repository, sections for [.NET 7](https://github.com/miroslavpopovic/what-is-new-in-dotnet#minimal-apis) and [.NET 8](https://github.com/miroslavpopovic/what-is-new-in-dotnet#minimal-apis-1).
+
 ## Presentations
 
 - [November 2022, Advanced Technology Days, Zagreb](2022-11-atd-minimal-apis.pptx)

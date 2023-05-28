@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinimalApis.MinimalSample",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinimalApis.MinimalSample.Tests", "tests\MinimalApis.MinimalSample.Tests\MinimalApis.MinimalSample.Tests.csproj", "{0B64D078-B585-4B78-8349-B9778BF3485A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalApis.MinimalSample.Refactored", "src\MinimalApis.MinimalSample.Refactored\MinimalApis.MinimalSample.Refactored.csproj", "{97835FEB-FFCF-4287-A542-5C6BCD480956}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinimalApis.MinimalSample.Refactored", "src\MinimalApis.MinimalSample.Refactored\MinimalApis.MinimalSample.Refactored.csproj", "{97835FEB-FFCF-4287-A542-5C6BCD480956}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Root", "Root", "{3DB98640-A573-47E6-AA4C-B92B06A64922}"
 	ProjectSection(SolutionItems) = preProject

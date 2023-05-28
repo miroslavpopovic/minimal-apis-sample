@@ -21,7 +21,7 @@ public class UsersModule : ICarterModule
         var usersGroup = app.MapGroup("/api/v{version:apiVersion}/users")
             .WithApiVersionSet(_apiVersionSet.Value)
             .WithTags("Users");
-        var usersAdminGroup = app.MapGroup("/")
+        var usersAdminGroup = usersGroup.MapGroup("/")
             .RequireAuthorization("AdminPolicy");
 
         usersGroup

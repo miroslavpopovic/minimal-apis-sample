@@ -1,0 +1,150 @@
+﻿@host = https://localhost:7181/api/v1
+@version = 2
+@newUserId = 3
+@newClientId = 3
+@newProjectId = 4
+@newTimeEntryId = 5
+
+GET {{host}}/users
+
+###
+
+GET {{host}}/users/1
+
+###
+
+POST {{host}}/users
+Accept: application/json
+Content-Type: application/json
+
+{
+    "name": "Test user from http file",
+    "hourRate": 42
+}
+
+###
+
+PUT {{host}}/users/{{newUserId}}
+Accept: application/json
+Content-Type: application/json
+
+{
+    "name": "Updated est user from http file",
+    "hourRate": 48
+}
+
+###
+
+DELETE {{host}}/users/{{newUserId}}
+
+###
+
+GET {{host}}/clients
+
+###
+
+GET {{host}}/clients/1
+
+###
+
+POST {{host}}/clients
+Accept: application/json
+Content-Type: application/json
+
+{
+    "name": "Test client from http file"
+}
+
+###
+
+PUT {{host}}/clients/{{newClientId}}
+Accept: application/json
+Content-Type: application/json
+
+{
+    "name": "Updated test client from http file"
+}
+
+###
+
+DELETE {{host}}/clients/{{newClientId}}
+
+###
+
+GET {{host}}/projects
+
+###
+
+GET {{host}}/projects/1
+
+###
+
+POST {{host}}/projects
+Accept: application/json
+Content-Type: application/json
+
+{
+    "name": "Test project from http file",
+    "clientId": 1
+}
+
+###
+
+PUT {{host}}/projects/{{newProjectId}}
+Accept: application/json
+Content-Type: application/json
+
+{
+    "name": "Updated test project from http file",
+    "clientId": 1
+}
+
+###
+
+DELETE {{host}}/projects/{{newProjectId}}
+
+###
+
+GET {{host}}/time-entries?page=1&size=3
+
+###
+
+GET {{host}}/time-entries/1/2023/5
+
+###
+
+GET {{host}}/time-entries/1
+
+###
+
+POST {{host}}/time-entries
+Accept: application/json
+Content-Type: application/json
+
+{
+    "userId": 1,
+    "projectId": 1,
+    "entryDate": "2023-05-23T14:30:00.000Z",
+    "hours": 4,
+    "description": "Test time entry from http file"
+}
+
+###
+
+PUT {{host}}/time-entries/{{newTimeEntryId}}
+Accept: application/json
+Content-Type: application/json
+
+{
+    "userId": 1,
+    "projectId": 1,
+    "entryDate": "2023-05-23T14:30:00.000Z",
+    "hours": 4,
+    "description": "Updated test time entry from http file"
+}
+
+###
+
+DELETE {{host}}/time-entries/{{newTimeEntryId}}
+
+###

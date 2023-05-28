@@ -1,5 +1,4 @@
 using Asp.Versioning;
-using Asp.Versioning.Builder;
 using Asp.Versioning.Conventions;
 using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;

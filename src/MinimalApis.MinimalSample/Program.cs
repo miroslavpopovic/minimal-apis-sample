@@ -79,10 +79,10 @@ var clientsAdminGroup = clientsGroup.MapGroup(string.Empty)
 clientsGroup
     .MapGet(string.Empty, GetClients)
     .WithName("GetClients")
-    .WithSummary("Get a paged list of clients.")
-    .WithDescription("Gets one page of the available clients.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Get a paged list of clients.";
+        operation.Description = "Gets one page of the available clients.";
         operation.Parameters[0].Description = "Page number.";
         operation.Parameters[1].Description = "Page size.";
         return operation;
@@ -101,10 +101,10 @@ clientsGroup
             : TypedResults.Ok(ClientModel.FromClient(client));
     })
     .WithName("GetClient")
-    .WithSummary("Get a client by id.")
-    .WithDescription("Gets a single client by id value.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Get a client by id.";
+        operation.Description = "Gets a single client by id value.";
         operation.Parameters[0].Description = "Id of the client to retrieve.";
         return operation;
     });
@@ -128,10 +128,10 @@ clientsAdminGroup
         return TypedResults.Ok();
     })
     .WithName("DeleteClient")
-    .WithSummary("Delete a client by id.")
-    .WithDescription("Deletes a single client by id value.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Delete a client by id.";
+        operation.Description = "Deletes a single client by id value.";
         operation.Parameters[0].Description = "Id of the client to delete.";
         return operation;
     });
@@ -154,9 +154,12 @@ clientsAdminGroup
     })
     .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
     .WithName("CreateClient")
-    .WithSummary("Create a new client.")
-    .WithDescription("Creates a new client with supplied values.")
-    .WithOpenApi();
+    .WithOpenApi(operation =>
+    {
+        operation.Summary = "Create a new client.";
+        operation.Description = "Creates a new client with supplied values.";
+        return operation;
+    });
 
 clientsAdminGroup
     .MapPut("{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<ClientModel>>> (
@@ -180,10 +183,10 @@ clientsAdminGroup
     })
     .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
     .WithName("UpdateClient")
-    .WithSummary("Update a client by id.")
-    .WithDescription("Updates a client with the given id, using the supplied data.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Update a client by id.";
+        operation.Description = "Updates a client with the given id, using the supplied data.";
         operation.Parameters[0].Description = "Id of the client to update.";
         return operation;
     });
@@ -218,10 +221,10 @@ async Task<PagedList<ProjectModel>> GetProjects(
 projectsGroup
     .MapGet(string.Empty, GetProjects)
     .WithName("GetProjects")
-    .WithSummary("Get a paged list of projects.")
-    .WithDescription("Gets one page of the available projects.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Get a paged list of projects.";
+        operation.Description = "Gets one page of the available projects.";
         operation.Parameters[0].Description = "Page number.";
         operation.Parameters[1].Description = "Page size.";
         return operation;
@@ -242,10 +245,10 @@ projectsGroup
             : TypedResults.Ok(ProjectModel.FromProject(project));
     })
     .WithName("GetProject")
-    .WithSummary("Get a project by id.")
-    .WithDescription("Gets a single project by id value.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Get a project by id.";
+        operation.Description = "Gets a single project by id value.";
         operation.Parameters[0].Description = "Id of the project to retrieve.";
         return operation;
     });
@@ -269,10 +272,10 @@ projectsAdminGroup
         return TypedResults.Ok();
     })
     .WithName("DeleteProject")
-    .WithSummary("Delete a project by id.")
-    .WithDescription("Deletes a single project by id value.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Delete a project by id.";
+        operation.Description = "Deletes a single project by id value.";
         operation.Parameters[0].Description = "Id of the project to delete.";
         return operation;
     });
@@ -302,9 +305,12 @@ projectsAdminGroup
     })
     .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
     .WithName("CreateProject")
-    .WithSummary("Create a new project.")
-    .WithDescription("Creates a new project with supplied values.")
-    .WithOpenApi();
+    .WithOpenApi(operation =>
+    {
+        operation.Summary = "Create a new project.";
+        operation.Description = "Creates a new project with supplied values.";
+        return operation;
+    });
 
 projectsAdminGroup
     .MapPut("{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<ProjectModel>>> (
@@ -330,10 +336,10 @@ projectsAdminGroup
     })
     .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
     .WithName("UpdateProject")
-    .WithSummary("Update a project by id.")
-    .WithDescription("Updates a project with the given id, using the supplied data.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Update a project by id.";
+        operation.Description = "Updates a project with the given id, using the supplied data.";
         operation.Parameters[0].Description = "Id of the project to update.";
         return operation;
     });
@@ -393,10 +399,10 @@ timeEntriesGroup
     .MapGet(string.Empty, GetTimeEntries)
     .RequireRateLimiting("get")
     .WithName("GetTimeEntries")
-    .WithSummary("Get a paged list of time entries.")
-    .WithDescription("Gets one page of the available time entries.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Get a paged list of time entries.";
+        operation.Description = "Gets one page of the available time entries.";
         operation.Parameters[0].Description = "Page number.";
         operation.Parameters[1].Description = "Page size.";
         return operation;
@@ -406,10 +412,10 @@ timeEntriesGroup
     .MapGet("{userId:long}/{year:int}/{month:int}", GetTimeEntriesByUserAndMonth)
     .RequireRateLimiting("get")
     .WithName("GetTimeEntriesByUserAndMonth")
-    .WithSummary("Get a list of time entries for user and month.")
-    .WithDescription("Gets a list of time entries for a specified user and month.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Get a list of time entries for user and month.";
+        operation.Description = "Gets a list of time entries for a specified user and month.";
         operation.Parameters[0].Description = "Page number.";
         operation.Parameters[1].Description = "Page size.";
         return operation;
@@ -433,10 +439,10 @@ timeEntriesGroup
     })
     .RequireRateLimiting("get")
     .WithName("GetTimeEntry")
-    .WithSummary("Get a time entry by id.")
-    .WithDescription("Gets a single time entry by id value.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Get a time entry by id.";
+        operation.Description = "Gets a single time entry by id value.";
         operation.Parameters[0].Description = "Id of the time entry to retrieve.";
         return operation;
     });
@@ -461,10 +467,10 @@ timeEntriesAdminGroup
     })
     .RequireRateLimiting("modify")
     .WithName("DeleteTimeEntry")
-    .WithSummary("Delete a time entry by id.")
-    .WithDescription("Deletes a single time entry by id value.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Delete a time entry by id.";
+        operation.Description = "Deletes a single time entry by id value.";
         operation.Parameters[0].Description = "Id of the time entry to delete.";
         return operation;
     });
@@ -500,9 +506,12 @@ timeEntriesAdminGroup
     .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
     .RequireRateLimiting("modify")
     .WithName("CreateTimeEntry")
-    .WithSummary("Create a new time entry.")
-    .WithDescription("Creates a new time entry with supplied values.")
-    .WithOpenApi();
+    .WithOpenApi(operation =>
+    {
+        operation.Summary = "Create a new time entry.";
+        operation.Description = "Creates a new time entry with supplied values.";
+        return operation;
+    });
 
 timeEntriesAdminGroup
     .MapPut("{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<TimeEntryModel>>> (
@@ -531,10 +540,10 @@ timeEntriesAdminGroup
     .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
     .RequireRateLimiting("modify")
     .WithName("UpdateTimeEntry")
-    .WithSummary("Update a time entry by id.")
-    .WithDescription("Updates a time entry with the given id, using the supplied data.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Update a time entry by id.";
+        operation.Description = "Updates a time entry with the given id, using the supplied data.";
         operation.Parameters[0].Description = "Id of the time entry to update.";
         return operation;
     });
@@ -568,10 +577,10 @@ async Task<PagedList<UserModel>> GetUsers(
 usersGroup
     .MapGet(string.Empty, GetUsers)
     .WithName("GetUsers")
-    .WithSummary("Get a paged list of users.")
-    .WithDescription("Gets one page of the available users.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Get a paged list of users.";
+        operation.Description = "Gets one page of the available users.";
         operation.Parameters[0].Description = "Page number.";
         operation.Parameters[1].Description = "Page size.";
         return operation;
@@ -590,10 +599,10 @@ usersGroup
             : TypedResults.Ok(UserModel.FromUser(user));
     })
     .WithName("GetUser")
-    .WithSummary("Get a user by id.")
-    .WithDescription("Gets a single user by id value.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Get a user by id.";
+        operation.Description = "Gets a single user by id value.";
         operation.Parameters[0].Description = "Id of the user to retrieve.";
         return operation;
     });
@@ -617,10 +626,10 @@ usersAdminGroup
         return TypedResults.Ok();
     })
     .WithName("DeleteUser")
-    .WithSummary("Delete a user by id.")
-    .WithDescription("Deletes a single user by id value.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Delete a user by id.";
+        operation.Description = "Deletes a single user by id value.";
         operation.Parameters[0].Description = "Id of the user to delete.";
         return operation;
     });
@@ -643,9 +652,12 @@ usersAdminGroup
     })
     .AddEndpointFilter<ValidationFilter<UserInputModel>>()
     .WithName("CreateUser")
-    .WithSummary("Create a new user.")
-    .WithDescription("Creates a new user with supplied values.")
-    .WithOpenApi();
+    .WithOpenApi(operation =>
+    {
+        operation.Summary = "Create a new user.";
+        operation.Description = "Creates a new user with supplied values.";
+        return operation;
+    });
 
 usersAdminGroup
     .MapPut("{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<UserModel>>> (
@@ -669,10 +681,10 @@ usersAdminGroup
     })
     .AddEndpointFilter<ValidationFilter<UserInputModel>>()
     .WithName("UpdateUser")
-    .WithSummary("Update a user by id.")
-    .WithDescription("Updates a user with the given id, using the supplied data.")
     .WithOpenApi(operation =>
     {
+        operation.Summary = "Update a user by id.";
+        operation.Description = "Updates a user with the given id, using the supplied data.";
         operation.Parameters[0].Description = "Id of the user to update.";
         return operation;
     });

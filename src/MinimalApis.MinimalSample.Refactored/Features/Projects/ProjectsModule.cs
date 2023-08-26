@@ -3,6 +3,7 @@ using Carter;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using MinimalApis.MinimalSample.Refactored.Data;
+using MinimalApis.MinimalSample.Refactored.Extensions;
 using MinimalApis.MinimalSample.Refactored.Features.Common;
 
 namespace MinimalApis.MinimalSample.Refactored.Features.Projects;
@@ -27,56 +28,44 @@ public class ProjectsModule : ICarterModule
         projectsGroup
             .MapGet("/", GetProjects)
             .WithName(nameof(GetProjects))
-            .WithSummary("Get a paged list of projects.")
-            .WithDescription("Gets one page of the available projects.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Page number.";
-                operation.Parameters[1].Description = "Page size.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Get a paged list of projects.", 
+                "Gets one page of the available projects.", 
+                "Page number.", 
+                "Page size.");
 
         projectsGroup
             .MapGet("/{id:long}", GetProject)
             .WithName(nameof(GetProject))
-            .WithSummary("Get a project by id.")
-            .WithDescription("Gets a single project by id value.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Id of the project to retrieve.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Get a project by id.", 
+                "Gets a single project by id value.", 
+                "Id of the project to retrieve.");
 
         projectsAdminGroup
             .MapDelete("/{id:long}", DeleteProject)
             .WithName(nameof(DeleteProject))
-            .WithSummary("Delete a project by id.")
-            .WithDescription("Deletes a single project by id value.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Id of the project to delete.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Delete a project by id.", 
+                "Deletes a single project by id value.", 
+                "Id of the project to delete.");
 
         projectsAdminGroup
             .MapPost("/", CreateProject)
             .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
             .WithName(nameof(CreateProject))
-            .WithSummary("Create a new project.")
-            .WithDescription("Creates a new project with supplied values.")
-            .WithOpenApi();
+            .WithOpenApi(
+                "Create a new project.", 
+                "Creates a new project with supplied values.");
 
         projectsAdminGroup
             .MapPut("/{id:long}", UpdateProject)
             .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
             .WithName(nameof(UpdateProject))
-            .WithSummary("Update a project by id.")
-            .WithDescription("Updates a project with the given id, using the supplied data.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Id of the project to update.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Update a project by id.", 
+                "Updates a project with the given id, using the supplied data.", 
+                "Id of the project to update.");
     }
 
     private static async Task<Results<ValidationProblem, NotFound, Created<ProjectModel>>> CreateProject(

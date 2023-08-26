@@ -3,6 +3,7 @@ using Carter;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using MinimalApis.MinimalSample.Refactored.Data;
+using MinimalApis.MinimalSample.Refactored.Extensions;
 using MinimalApis.MinimalSample.Refactored.Features.Common;
 
 namespace MinimalApis.MinimalSample.Refactored.Features.TimeEntries;
@@ -29,71 +30,56 @@ public class TimeEntriesModule : ICarterModule
             .MapGet("/", GetTimeEntries)
             .RequireRateLimiting("get")
             .WithName(nameof(GetTimeEntries))
-            .WithSummary("Get a paged list of time entries.")
-            .WithDescription("Gets one page of the available time entries.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Page number.";
-                operation.Parameters[1].Description = "Page size.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Get a paged list of time entries.", 
+                "Gets one page of the available time entries.", 
+                "Page number.", 
+                "Page size.");
 
         timeEntriesGroup
             .MapGet("/{userId:long}/{year:int}/{month:int}", GetTimeEntriesByUserAndMonth)
             .RequireRateLimiting("get")
             .WithName(nameof(GetTimeEntriesByUserAndMonth))
-            .WithSummary("Get a list of time entries for user and month.")
-            .WithDescription("Gets a list of time entries for a specified user and month.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Id of the user to retrieve time entries for.";
-                operation.Parameters[1].Description = "Year of the time entries.";
-                operation.Parameters[2].Description = "Month of the time entries.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Get a list of time entries for user and month.", 
+                "Gets a list of time entries for a specified user and month.", 
+                "Id of the user to retrieve time entries for.", 
+                "Year of the time entries.",
+                "Month of the time entries.");
 
         timeEntriesGroup
             .MapGet("/{id:long}", GetTimeEntry)
             .RequireRateLimiting("get")
             .WithName(nameof(GetTimeEntry))
-            .WithSummary("Get a time entry by id.")
-            .WithDescription("Gets a single time entry by id value.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Id of the time entry to retrieve.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Get a time entry by id.", 
+                "Gets a single time entry by id value.", 
+                "Id of the time entry to retrieve.");
 
         timeEntriesAdminGroup
             .MapDelete("/{id:long}", DeleteTimeEntry)
             .WithName(nameof(DeleteTimeEntry))
-            .WithSummary("Delete a time entry by id.")
-            .WithDescription("Deletes a single time entry by id value.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Id of the time entry to delete.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Delete a time entry by id.", 
+                "Deletes a single time entry by id value.", 
+                "Id of the time entry to delete.");
 
         timeEntriesAdminGroup
             .MapPost("/", CreateTimeEntry)
             .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
-            .WithName("CreateTimeEntry")
-            .WithSummary("Create a new time entry.")
-            .WithDescription("Creates a new time entry with supplied values.")
-            .WithOpenApi();
+            .WithName(nameof(CreateTimeEntry))
+            .WithOpenApi(
+                "Create a new time entry.", 
+                "Creates a new time entry with supplied values.");
 
         timeEntriesAdminGroup
             .MapPut("/{id:long}", UpdateTimeEntry)
             .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
             .WithName(nameof(UpdateTimeEntry))
-            .WithSummary("Update a time entry by id.")
-            .WithDescription("Updates a time entry with the given id, using the supplied data.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Id of the time entry to update.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Update a time entry by id.", 
+                "Updates a time entry with the given id, using the supplied data.", 
+                "Id of the time entry to update.");
     }
 
     private static async Task<Results<ValidationProblem, NotFound, Created<TimeEntryModel>>> CreateTimeEntry(

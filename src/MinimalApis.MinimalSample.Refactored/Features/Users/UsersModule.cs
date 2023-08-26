@@ -3,6 +3,7 @@ using Carter;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using MinimalApis.MinimalSample.Refactored.Data;
+using MinimalApis.MinimalSample.Refactored.Extensions;
 using MinimalApis.MinimalSample.Refactored.Features.Common;
 
 namespace MinimalApis.MinimalSample.Refactored.Features.Users;
@@ -27,56 +28,44 @@ public class UsersModule : ICarterModule
         usersGroup
             .MapGet("/", GetUsers)
             .WithName(nameof(GetUsers))
-            .WithSummary("Get a paged list of users.")
-            .WithDescription("Gets one page of the available users.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Page number.";
-                operation.Parameters[1].Description = "Page size.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Get a paged list of users.", 
+                "Gets one page of the available users.", 
+                "Page number.", 
+                "Page size.");
 
         usersGroup
             .MapGet("/{id:long}", GetUser)
             .WithName(nameof(GetUser))
-            .WithSummary("Get a user by id.")
-            .WithDescription("Gets a single user by id value.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Id of the user to retrieve.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Get a user by id.", 
+                "Gets a single user by id value.", 
+                "");
 
         usersAdminGroup
             .MapDelete("/{id:long}", DeleteUser)
             .WithName(nameof(DeleteUser))
-            .WithSummary("Delete a user by id.")
-            .WithDescription("Deletes a single user by id value.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Id of the user to delete.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Delete a user by id.", 
+                "Deletes a single user by id value.",
+                "Id of the user to delete.");
 
         usersAdminGroup
             .MapPost("/", CreateUser)
             .AddEndpointFilter<ValidationFilter<UserInputModel>>()
             .WithName(nameof(CreateUser))
-            .WithSummary("Create a new user.")
-            .WithDescription("Creates a new user with supplied values.")
-            .WithOpenApi();
+            .WithOpenApi(
+                "Create a new user.", 
+                "Creates a new user with supplied values.");
 
         usersAdminGroup
             .MapPut("/{id:long}", UpdateUser)
             .AddEndpointFilter<ValidationFilter<UserInputModel>>()
             .WithName(nameof(UpdateUser))
-            .WithSummary("Update a user by id.")
-            .WithDescription("Updates a user with the given id, using the supplied data.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Id of the user to update.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Update a user by id.", 
+                "Updates a user with the given id, using the supplied data.",
+                "Id of the user to update.");
     }
 
     private static async Task<Results<ValidationProblem, Created<UserModel>>> CreateUser(

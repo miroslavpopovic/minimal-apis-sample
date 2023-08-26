@@ -3,6 +3,7 @@ using Carter;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using MinimalApis.MinimalSample.Refactored.Data;
+using MinimalApis.MinimalSample.Refactored.Extensions;
 using MinimalApis.MinimalSample.Refactored.Features.Common;
 
 namespace MinimalApis.MinimalSample.Refactored.Features.Clients;
@@ -27,56 +28,44 @@ public class ClientsModule : ICarterModule
         clientsGroup
             .MapGet("/", GetClients)
             .WithName(nameof(GetClients))
-            .WithSummary("Get a paged list of clients.")
-            .WithDescription("Gets one page of the available clients.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Page number.";
-                operation.Parameters[1].Description = "Page size.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Get a paged list of clients.", 
+                "Gets one page of the available clients.", 
+                "Page number.", 
+                "Page size.");
 
         clientsGroup
             .MapGet("/{id:long}", GetClient)
             .WithName(nameof(GetClient))
-            .WithSummary("Get a client by id.")
-            .WithDescription("Gets a single client by id value.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Id of the client to retrieve.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Get a client by id.", 
+                "Gets a single client by id value.", 
+                "Id of the client to retrieve.");
 
         clientsAdminGroup
             .MapDelete("/{id:long}", DeleteClient)
             .WithName(nameof(DeleteClient))
-            .WithSummary("Delete a client by id.")
-            .WithDescription("Deletes a single client by id value.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Id of the client to delete.";
-                return operation;
-            });
+            .WithOpenApi(
+                "Delete a client by id.",
+                "Deletes a single client by id value.",
+                "Id of the client to delete.");
 
         clientsAdminGroup
             .MapPost("/", CreateClient)
             .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
             .WithName(nameof(CreateClient))
-            .WithSummary("Create a new client.")
-            .WithDescription("Creates a new client with supplied values.")
-            .WithOpenApi();
+            .WithOpenApi(
+                "Create a new client.", 
+                "Creates a new client with supplied values.");
 
         clientsAdminGroup
             .MapPut("/{id:long}", UpdateClient)
             .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
-            .WithName("UpdateClient")
-            .WithSummary("Update a client by id.")
-            .WithDescription("Updates a client with the given id, using the supplied data.")
-            .WithOpenApi(operation =>
-            {
-                operation.Parameters[0].Description = "Id of the client to update.";
-                return operation;
-            });
+            .WithName(nameof(UpdateClient))
+            .WithOpenApi(
+                "Update a client by id.", 
+                "Updates a client with the given id, using the supplied data.", 
+                "Id of the client to update.");
     }
 
     private static async Task<Results<ValidationProblem, Created<ClientModel>>> CreateClient(

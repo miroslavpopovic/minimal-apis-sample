@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
@@ -8,9 +8,9 @@
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
-    <!--<PropertyGroup>
+    <PropertyGroup>
         <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
-    </PropertyGroup>-->
+    </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <DocumentationFile>bin\Debug\net7.0\MinimalApis.MinimalSample.xml</DocumentationFile>

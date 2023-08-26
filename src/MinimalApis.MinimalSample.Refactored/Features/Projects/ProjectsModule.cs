@@ -25,8 +25,7 @@ public class ProjectsModule : ICarterModule
         var projectsAdminGroup = projectsGroup.MapGroup("/")
             .RequireAuthorization("AdminPolicy");
 
-        projectsGroup
-            .MapGet("/", GetProjects)
+        projectsGroup.MapGet("/", GetProjects)
             .WithName(nameof(GetProjects))
             .WithOpenApi(
                 "Get a paged list of projects.", 
@@ -34,32 +33,28 @@ public class ProjectsModule : ICarterModule
                 "Page number.", 
                 "Page size.");
 
-        projectsGroup
-            .MapGet("/{id:long}", GetProject)
+        projectsGroup.MapGet("/{id:long}", GetProject)
             .WithName(nameof(GetProject))
             .WithOpenApi(
                 "Get a project by id.", 
                 "Gets a single project by id value.", 
                 "Id of the project to retrieve.");
 
-        projectsAdminGroup
-            .MapDelete("/{id:long}", DeleteProject)
+        projectsAdminGroup.MapDelete("/{id:long}", DeleteProject)
             .WithName(nameof(DeleteProject))
             .WithOpenApi(
                 "Delete a project by id.", 
                 "Deletes a single project by id value.", 
                 "Id of the project to delete.");
 
-        projectsAdminGroup
-            .MapPost("/", CreateProject)
+        projectsAdminGroup.MapPost("/", CreateProject)
             .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
             .WithName(nameof(CreateProject))
             .WithOpenApi(
                 "Create a new project.", 
                 "Creates a new project with supplied values.");
 
-        projectsAdminGroup
-            .MapPut("/{id:long}", UpdateProject)
+        projectsAdminGroup.MapPut("/{id:long}", UpdateProject)
             .AddEndpointFilter<ValidationFilter<ProjectInputModel>>()
             .WithName(nameof(UpdateProject))
             .WithOpenApi(

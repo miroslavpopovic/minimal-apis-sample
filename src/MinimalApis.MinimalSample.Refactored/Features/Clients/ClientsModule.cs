@@ -25,8 +25,7 @@ public class ClientsModule : ICarterModule
         var clientsAdminGroup = clientsGroup.MapGroup("/")
             .RequireAuthorization("AdminPolicy");
 
-        clientsGroup
-            .MapGet("/", GetClients)
+        clientsGroup.MapGet("/", GetClients)
             .WithName(nameof(GetClients))
             .WithOpenApi(
                 "Get a paged list of clients.", 
@@ -34,32 +33,28 @@ public class ClientsModule : ICarterModule
                 "Page number.", 
                 "Page size.");
 
-        clientsGroup
-            .MapGet("/{id:long}", GetClient)
+        clientsGroup.MapGet("/{id:long}", GetClient)
             .WithName(nameof(GetClient))
             .WithOpenApi(
                 "Get a client by id.", 
                 "Gets a single client by id value.", 
                 "Id of the client to retrieve.");
 
-        clientsAdminGroup
-            .MapDelete("/{id:long}", DeleteClient)
+        clientsAdminGroup.MapDelete("/{id:long}", DeleteClient)
             .WithName(nameof(DeleteClient))
             .WithOpenApi(
                 "Delete a client by id.",
                 "Deletes a single client by id value.",
                 "Id of the client to delete.");
 
-        clientsAdminGroup
-            .MapPost("/", CreateClient)
+        clientsAdminGroup.MapPost("/", CreateClient)
             .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
             .WithName(nameof(CreateClient))
             .WithOpenApi(
                 "Create a new client.", 
                 "Creates a new client with supplied values.");
 
-        clientsAdminGroup
-            .MapPut("/{id:long}", UpdateClient)
+        clientsAdminGroup.MapPut("/{id:long}", UpdateClient)
             .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
             .WithName(nameof(UpdateClient))
             .WithOpenApi(

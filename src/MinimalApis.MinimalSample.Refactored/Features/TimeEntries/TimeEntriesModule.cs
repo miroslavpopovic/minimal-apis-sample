@@ -26,8 +26,7 @@ public class TimeEntriesModule : ICarterModule
             .RequireAuthorization("AdminPolicy")
             .RequireRateLimiting("modify");
 
-        timeEntriesGroup
-            .MapGet("/", GetTimeEntries)
+        timeEntriesGroup.MapGet("/", GetTimeEntries)
             .RequireRateLimiting("get")
             .WithName(nameof(GetTimeEntries))
             .WithOpenApi(
@@ -36,8 +35,7 @@ public class TimeEntriesModule : ICarterModule
                 "Page number.", 
                 "Page size.");
 
-        timeEntriesGroup
-            .MapGet("/{userId:long}/{year:int}/{month:int}", GetTimeEntriesByUserAndMonth)
+        timeEntriesGroup.MapGet("/{userId:long}/{year:int}/{month:int}", GetTimeEntriesByUserAndMonth)
             .RequireRateLimiting("get")
             .WithName(nameof(GetTimeEntriesByUserAndMonth))
             .WithOpenApi(
@@ -47,8 +45,7 @@ public class TimeEntriesModule : ICarterModule
                 "Year of the time entries.",
                 "Month of the time entries.");
 
-        timeEntriesGroup
-            .MapGet("/{id:long}", GetTimeEntry)
+        timeEntriesGroup.MapGet("/{id:long}", GetTimeEntry)
             .RequireRateLimiting("get")
             .WithName(nameof(GetTimeEntry))
             .WithOpenApi(
@@ -56,24 +53,21 @@ public class TimeEntriesModule : ICarterModule
                 "Gets a single time entry by id value.", 
                 "Id of the time entry to retrieve.");
 
-        timeEntriesAdminGroup
-            .MapDelete("/{id:long}", DeleteTimeEntry)
+        timeEntriesAdminGroup.MapDelete("/{id:long}", DeleteTimeEntry)
             .WithName(nameof(DeleteTimeEntry))
             .WithOpenApi(
                 "Delete a time entry by id.", 
                 "Deletes a single time entry by id value.", 
                 "Id of the time entry to delete.");
 
-        timeEntriesAdminGroup
-            .MapPost("/", CreateTimeEntry)
+        timeEntriesAdminGroup.MapPost("/", CreateTimeEntry)
             .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
             .WithName(nameof(CreateTimeEntry))
             .WithOpenApi(
                 "Create a new time entry.", 
                 "Creates a new time entry with supplied values.");
 
-        timeEntriesAdminGroup
-            .MapPut("/{id:long}", UpdateTimeEntry)
+        timeEntriesAdminGroup.MapPut("/{id:long}", UpdateTimeEntry)
             .AddEndpointFilter<ValidationFilter<TimeEntryInputModel>>()
             .WithName(nameof(UpdateTimeEntry))
             .WithOpenApi(

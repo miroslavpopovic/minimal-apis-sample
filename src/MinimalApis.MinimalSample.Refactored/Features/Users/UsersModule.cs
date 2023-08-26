@@ -25,8 +25,7 @@ public class UsersModule : ICarterModule
         var usersAdminGroup = usersGroup.MapGroup("/")
             .RequireAuthorization("AdminPolicy");
 
-        usersGroup
-            .MapGet("/", GetUsers)
+        usersGroup.MapGet("/", GetUsers)
             .WithName(nameof(GetUsers))
             .WithOpenApi(
                 "Get a paged list of users.", 
@@ -34,32 +33,28 @@ public class UsersModule : ICarterModule
                 "Page number.", 
                 "Page size.");
 
-        usersGroup
-            .MapGet("/{id:long}", GetUser)
+        usersGroup.MapGet("/{id:long}", GetUser)
             .WithName(nameof(GetUser))
             .WithOpenApi(
                 "Get a user by id.", 
                 "Gets a single user by id value.", 
                 "");
 
-        usersAdminGroup
-            .MapDelete("/{id:long}", DeleteUser)
+        usersAdminGroup.MapDelete("/{id:long}", DeleteUser)
             .WithName(nameof(DeleteUser))
             .WithOpenApi(
                 "Delete a user by id.", 
                 "Deletes a single user by id value.",
                 "Id of the user to delete.");
 
-        usersAdminGroup
-            .MapPost("/", CreateUser)
+        usersAdminGroup.MapPost("/", CreateUser)
             .AddEndpointFilter<ValidationFilter<UserInputModel>>()
             .WithName(nameof(CreateUser))
             .WithOpenApi(
                 "Create a new user.", 
                 "Creates a new user with supplied values.");
 
-        usersAdminGroup
-            .MapPut("/{id:long}", UpdateUser)
+        usersAdminGroup.MapPut("/{id:long}", UpdateUser)
             .AddEndpointFilter<ValidationFilter<UserInputModel>>()
             .WithName(nameof(UpdateUser))
             .WithOpenApi(

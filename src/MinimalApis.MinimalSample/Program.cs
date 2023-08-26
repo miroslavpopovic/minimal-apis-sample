@@ -76,8 +76,7 @@ var clientsGroup = app
 var clientsAdminGroup = clientsGroup.MapGroup(string.Empty)
     .RequireAuthorization("AdminPolicy");
 
-clientsGroup
-    .MapGet(string.Empty, GetClients)
+clientsGroup.MapGet(string.Empty, GetClients)
     .WithName("GetClients")
     .WithOpenApi(operation =>
     {
@@ -88,8 +87,7 @@ clientsGroup
         return operation;
     });
 
-clientsGroup
-    .MapGet("{id:long}", async Task<Results<NotFound, Ok<ClientModel>>> (
+clientsGroup.MapGet("{id:long}", async Task<Results<NotFound, Ok<ClientModel>>> (
         long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Getting a client with id {Id}", id);
@@ -109,8 +107,7 @@ clientsGroup
         return operation;
     });
 
-clientsAdminGroup
-    .MapDelete("{id:long}",
+clientsAdminGroup.MapDelete("{id:long}",
     async Task<Results<NotFound, Ok>> (long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Deleting a client with id {Id}", id);
@@ -136,8 +133,7 @@ clientsAdminGroup
         return operation;
     });
 
-clientsAdminGroup
-    .MapPost(string.Empty, async Task<Results<ValidationProblem, CreatedAtRoute<ClientModel>>> (
+clientsAdminGroup.MapPost(string.Empty, async Task<Results<ValidationProblem, CreatedAtRoute<ClientModel>>> (
         ClientInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Creating a new client with name {Name}", model.Name);
@@ -161,8 +157,7 @@ clientsAdminGroup
         return operation;
     });
 
-clientsAdminGroup
-    .MapPut("{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<ClientModel>>> (
+clientsAdminGroup.MapPut("{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<ClientModel>>> (
         long id, ClientInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Updating a client with id {Id}", id);
@@ -218,8 +213,7 @@ async Task<PagedList<ProjectModel>> GetProjects(
     };
 }
 
-projectsGroup
-    .MapGet(string.Empty, GetProjects)
+projectsGroup.MapGet(string.Empty, GetProjects)
     .WithName("GetProjects")
     .WithOpenApi(operation =>
     {
@@ -230,8 +224,7 @@ projectsGroup
         return operation;
     });
 
-projectsGroup
-    .MapGet("{id:long}", async Task<Results<NotFound, Ok<ProjectModel>>> (
+projectsGroup.MapGet("{id:long}", async Task<Results<NotFound, Ok<ProjectModel>>> (
     long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Getting a project with id {Id}", id);
@@ -253,8 +246,7 @@ projectsGroup
         return operation;
     });
 
-projectsAdminGroup
-    .MapDelete("{id:long}", async Task<Results<NotFound, Ok>> (
+projectsAdminGroup.MapDelete("{id:long}", async Task<Results<NotFound, Ok>> (
         long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Deleting a project with id {Id}", id);
@@ -280,8 +272,7 @@ projectsAdminGroup
         return operation;
     });
 
-projectsAdminGroup
-    .MapPost(string.Empty,
+projectsAdminGroup.MapPost(string.Empty,
     async Task<Results<ValidationProblem, NotFound, CreatedAtRoute<ProjectModel>>> (
         ProjectInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
@@ -312,8 +303,7 @@ projectsAdminGroup
         return operation;
     });
 
-projectsAdminGroup
-    .MapPut("{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<ProjectModel>>> (
+projectsAdminGroup.MapPut("{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<ProjectModel>>> (
         long id, ProjectInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Updating a project with id {Id}", id);
@@ -395,8 +385,7 @@ async Task<TimeEntryModel[]> GetTimeEntriesByUserAndMonth(
         .ToArray();
 }
 
-timeEntriesGroup
-    .MapGet(string.Empty, GetTimeEntries)
+timeEntriesGroup.MapGet(string.Empty, GetTimeEntries)
     .RequireRateLimiting("get")
     .WithName("GetTimeEntries")
     .WithOpenApi(operation =>
@@ -408,8 +397,7 @@ timeEntriesGroup
         return operation;
     });
 
-timeEntriesGroup
-    .MapGet("{userId:long}/{year:int}/{month:int}", GetTimeEntriesByUserAndMonth)
+timeEntriesGroup.MapGet("{userId:long}/{year:int}/{month:int}", GetTimeEntriesByUserAndMonth)
     .RequireRateLimiting("get")
     .WithName("GetTimeEntriesByUserAndMonth")
     .WithOpenApi(operation =>
@@ -421,8 +409,7 @@ timeEntriesGroup
         return operation;
     });
 
-timeEntriesGroup
-    .MapGet("{id:long}", async Task<Results<NotFound, Ok<TimeEntryModel>>> (
+timeEntriesGroup.MapGet("{id:long}", async Task<Results<NotFound, Ok<TimeEntryModel>>> (
         long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Getting a time entry with id {Id}", id);
@@ -447,8 +434,7 @@ timeEntriesGroup
         return operation;
     });
 
-timeEntriesAdminGroup
-    .MapDelete("{id:long}", async Task<Results<NotFound, Ok>> (
+timeEntriesAdminGroup.MapDelete("{id:long}", async Task<Results<NotFound, Ok>> (
         long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Deleting time entries with id {Id}", id);
@@ -475,8 +461,7 @@ timeEntriesAdminGroup
         return operation;
     });
 
-timeEntriesAdminGroup
-    .MapPost(string.Empty, async Task<Results<ValidationProblem, NotFound, CreatedAtRoute<TimeEntryModel>>> (
+timeEntriesAdminGroup.MapPost(string.Empty, async Task<Results<ValidationProblem, NotFound, CreatedAtRoute<TimeEntryModel>>> (
         TimeEntryInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug(
@@ -513,8 +498,7 @@ timeEntriesAdminGroup
         return operation;
     });
 
-timeEntriesAdminGroup
-    .MapPut("{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<TimeEntryModel>>> (
+timeEntriesAdminGroup.MapPut("{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<TimeEntryModel>>> (
         long id, TimeEntryInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Updating a time entry with id {Id}", id);
@@ -574,8 +558,7 @@ async Task<PagedList<UserModel>> GetUsers(
     };
 }
 
-usersGroup
-    .MapGet(string.Empty, GetUsers)
+usersGroup.MapGet(string.Empty, GetUsers)
     .WithName("GetUsers")
     .WithOpenApi(operation =>
     {
@@ -586,8 +569,7 @@ usersGroup
         return operation;
     });
 
-usersGroup
-    .MapGet("{id:long}", async Task<Results<NotFound, Ok<UserModel>>> (
+usersGroup.MapGet("{id:long}", async Task<Results<NotFound, Ok<UserModel>>> (
         long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Getting a user with id {Id}", id);
@@ -607,8 +589,7 @@ usersGroup
         return operation;
     });
 
-usersAdminGroup
-    .MapDelete("{id:long}", async Task<Results<NotFound, Ok>> (
+usersAdminGroup.MapDelete("{id:long}", async Task<Results<NotFound, Ok>> (
         long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Deleting a user with id {Id}", id);
@@ -634,8 +615,7 @@ usersAdminGroup
         return operation;
     });
 
-usersAdminGroup
-    .MapPost(string.Empty, async Task<Results<ValidationProblem, CreatedAtRoute<UserModel>>> (
+usersAdminGroup.MapPost(string.Empty, async Task<Results<ValidationProblem, CreatedAtRoute<UserModel>>> (
         UserInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Creating a new user with name {Name}", model.Name);
@@ -659,8 +639,7 @@ usersAdminGroup
         return operation;
     });
 
-usersAdminGroup
-    .MapPut("{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<UserModel>>> (
+usersAdminGroup.MapPut("{id:long}", async Task<Results<ValidationProblem, NotFound, Ok<UserModel>>> (
         long id, UserInputModel model, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>
     {
         logger.LogDebug("Updating a user with id {Id}", id);

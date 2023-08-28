@@ -8,19 +8,12 @@ using MinimalApis.MinimalSample.Refactored.Features.Common;
 
 namespace MinimalApis.MinimalSample.Refactored.Features.TimeEntries;
 
-public class TimeEntriesModule : ICarterModule
+public class TimeEntriesModule(Lazy<ApiVersionSet> apiVersionSet) : ICarterModule
 {
-    private readonly Lazy<ApiVersionSet> _apiVersionSet;
-
-    public TimeEntriesModule(Lazy<ApiVersionSet> apiVersionSet)
-    {
-        _apiVersionSet = apiVersionSet;
-    }
-
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         var timeEntriesGroup = app.MapGroup("/api/v{version:apiVersion}/time-entries")
-            .WithApiVersionSet(_apiVersionSet.Value)
+            .WithApiVersionSet(apiVersionSet.Value)
             .WithTags("TimeEntries");
         var timeEntriesAdminGroup = timeEntriesGroup.MapGroup("/")
             .RequireAuthorization("AdminPolicy")

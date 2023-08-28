@@ -8,19 +8,12 @@ using MinimalApis.MinimalSample.Refactored.Features.Common;
 
 namespace MinimalApis.MinimalSample.Refactored.Features.Projects;
 
-public class ProjectsModule : ICarterModule
+public class ProjectsModule(Lazy<ApiVersionSet> apiVersionSet) : ICarterModule
 {
-    private readonly Lazy<ApiVersionSet> _apiVersionSet;
-
-    public ProjectsModule(Lazy<ApiVersionSet> apiVersionSet)
-    {
-        _apiVersionSet = apiVersionSet;
-    }
-
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         var projectsGroup = app.MapGroup("/api/v{version:apiVersion}/projects")
-            .WithApiVersionSet(_apiVersionSet.Value)
+            .WithApiVersionSet(apiVersionSet.Value)
             .WithTags("Projects");
         var projectsAdminGroup = projectsGroup.MapGroup("/")
             .RequireAuthorization("AdminPolicy");

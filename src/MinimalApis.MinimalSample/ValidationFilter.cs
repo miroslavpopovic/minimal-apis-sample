@@ -8,7 +8,8 @@ public class ValidationFilter<T> : IEndpointFilter where T : class
 
     public ValidationFilter(IValidator<T> validator) => _validator = validator;
 
-    public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
+    public async ValueTask<object?> InvokeAsync(
+        EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         if (context.Arguments.SingleOrDefault(p => p!.GetType() == typeof(T)) is not T validatable)
         {

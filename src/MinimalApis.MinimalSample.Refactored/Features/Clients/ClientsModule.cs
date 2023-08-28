@@ -8,19 +8,12 @@ using MinimalApis.MinimalSample.Refactored.Features.Common;
 
 namespace MinimalApis.MinimalSample.Refactored.Features.Clients;
 
-public class ClientsModule : ICarterModule
+public class ClientsModule(Lazy<ApiVersionSet> apiVersionSet) : ICarterModule
 {
-    private readonly Lazy<ApiVersionSet> _apiVersionSet;
-
-    public ClientsModule(Lazy<ApiVersionSet> apiVersionSet)
-    {
-        _apiVersionSet = apiVersionSet;
-    }
-
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         var clientsGroup = app.MapGroup("/api/v{version:apiVersion}/clients")
-            .WithApiVersionSet(_apiVersionSet.Value)
+            .WithApiVersionSet(apiVersionSet.Value)
             .WithTags("Clients");
         var clientsAdminGroup = clientsGroup.MapGroup("/")
             .RequireAuthorization("AdminPolicy");

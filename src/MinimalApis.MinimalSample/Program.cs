@@ -50,6 +50,24 @@ app.UseCors(policyBuilder => policyBuilder
 
 app.UseRateLimiter();
 
+var clientsGroup = app
+    .MapGroup("/api/v{version:apiVersion}/clients/")
+    .WithApiVersionSet(versionSet)
+    .WithTags("Clients");
+var clientsAdminGroup = clientsGroup.MapGroup(string.Empty)
+    .RequireAuthorization("AdminPolicy");
+
+clientsGroup.MapGet(string.Empty, GetClients)
+    .WithName("GetClients")
+    .WithOpenApi(operation =>
+    {
+        operation.Summary = "Get a paged list of clients.";
+        operation.Description = "Gets one page of the available clients.";
+        operation.Parameters[0].Description = "Page number.";
+        operation.Parameters[1].Description = "Page size.";
+        return operation;
+    });
+
 async Task<PagedList<ClientModel>> GetClients(
     TimeTrackerDbContext dbContext, ILogger<Program> logger, int page = 1, int size = 5)
 {
@@ -68,24 +86,6 @@ async Task<PagedList<ClientModel>> GetClients(
         TotalCount = await dbContext.Clients!.CountAsync()
     };
 }
-
-var clientsGroup = app
-    .MapGroup("/api/v{version:apiVersion}/clients/")
-    .WithApiVersionSet(versionSet)
-    .WithTags("Clients");
-var clientsAdminGroup = clientsGroup.MapGroup(string.Empty)
-    .RequireAuthorization("AdminPolicy");
-
-clientsGroup.MapGet(string.Empty, GetClients)
-    .WithName("GetClients")
-    .WithOpenApi(operation =>
-    {
-        operation.Summary = "Get a paged list of clients.";
-        operation.Description = "Gets one page of the available clients.";
-        operation.Parameters[0].Description = "Page number.";
-        operation.Parameters[1].Description = "Page size.";
-        return operation;
-    });
 
 clientsGroup.MapGet("{id:long}", async Task<Results<NotFound, Ok<ClientModel>>> (
         long id, TimeTrackerDbContext dbContext, ILogger<Program> logger) =>

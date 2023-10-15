@@ -21,16 +21,16 @@ public class ClientsModule(Lazy<ApiVersionSet> apiVersionSet) : ICarterModule
         clientsGroup.MapGet("/", GetClients)
             .WithName(nameof(GetClients))
             .WithOpenApi(
-                "Get a paged list of clients.", 
-                "Gets one page of the available clients.", 
-                "Page number.", 
+                "Get a paged list of clients.",
+                "Gets one page of the available clients.",
+                "Page number.",
                 "Page size.");
 
         clientsGroup.MapGet("/{id:long}", GetClient)
             .WithName(nameof(GetClient))
             .WithOpenApi(
-                "Get a client by id.", 
-                "Gets a single client by id value.", 
+                "Get a client by id.",
+                "Gets a single client by id value.",
                 "Id of the client to retrieve.");
 
         clientsAdminGroup.MapDelete("/{id:long}", DeleteClient)
@@ -44,15 +44,15 @@ public class ClientsModule(Lazy<ApiVersionSet> apiVersionSet) : ICarterModule
             .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
             .WithName(nameof(CreateClient))
             .WithOpenApi(
-                "Create a new client.", 
+                "Create a new client.",
                 "Creates a new client with supplied values.");
 
         clientsAdminGroup.MapPut("/{id:long}", UpdateClient)
             .AddEndpointFilter<ValidationFilter<ClientInputModel>>()
             .WithName(nameof(UpdateClient))
             .WithOpenApi(
-                "Update a client by id.", 
-                "Updates a client with the given id, using the supplied data.", 
+                "Update a client by id.",
+                "Updates a client with the given id, using the supplied data.",
                 "Id of the client to update.");
     }
 
@@ -90,7 +90,7 @@ public class ClientsModule(Lazy<ApiVersionSet> apiVersionSet) : ICarterModule
         return TypedResults.Ok();
     }
 
-    private static async Task<Results<NotFound, Ok<ClientModel>>> GetClient(
+    private static async Task<Results<NotFound, Ok<ClientModel>, UnauthorizedHttpResult>> GetClient(
         long id, TimeTrackerDbContext dbContext, ILogger<Program> logger)
     {
         logger.LogDebug("Getting a client with id {Id}", id);

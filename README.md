@@ -11,6 +11,7 @@ To learn what is new in ASP.NET Core Minimal APIs, you can check [What's new in 
 - [September 2022, KulenDayz, Osijek](2022-09-kulendayz-minimal-apis.pptx)
 - [May 2023, Thrive, Lipica](2023-05-thrive-minimal-apis.pptx)
 - [August 2023, .NET Day, Zürich](2023-08-dotnetday-minimal-apis.pptx)
+- [October 2023, Network, Neum](2023-10-network-minimal-apis.pptx)
 
 ## Solution organization
 
